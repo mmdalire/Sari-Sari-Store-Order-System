@@ -6,10 +6,6 @@ import { makeStyles } from "@material-ui/core";
 
 import ListingTable from "../shared/UI/ListingTable";
 
-const DUMMY_DATA = [
-	{ poNo: "PONO202202-0001", credit: 100, createddate: "2022-10-12" },
-];
-
 const tableHeaders = [
 	{ id: "poNo", label: "Order Number" },
 	{ id: "credit", label: "Credit" },
@@ -68,7 +64,7 @@ const ViewCustomerCredit = (props) => {
 			</Grid>
 			<ListingTable
 				headers={tableHeaders}
-				data={DUMMY_DATA}
+				data={props.data}
 				limit={10}
 				page={1}
 			/>

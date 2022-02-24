@@ -8,7 +8,6 @@ import Container from "@material-ui/core/Container";
 import DeleteIcon from "@material-ui/icons/Delete";
 import EditIcon from "@material-ui/icons/Edit";
 import VisibilityIcon from "@material-ui/icons/Visibility";
-import { makeStyles } from "@material-ui/styles";
 
 import BlacklistCustomer from "../components/customers/BlacklistCustomer";
 import CreateCustomer from "../components/customers/CreateCustomer";
@@ -143,24 +142,12 @@ const createCustomerModal = {
 	),
 };
 
-const useStyles = makeStyles((theme) => {
-	return {
-		icon: {
-			fontSize: "30px",
-			marginRight: theme.spacing(1),
-		},
-	};
-});
-
 const Customers = () => {
-	// const [headers] = useState(tableHeaders);
 	const [filter, setFilter] = useState({});
 	const [limit, setLimit] = useState(1);
 	const [page, setPage] = useState(1);
 	const [openModal, setOpenModal] = useState(false);
 	const [modalConfig, setModalConfig] = useState(createCustomerModal);
-
-	const classes = useStyles();
 
 	const handleFilter = (filters) => {
 		setFilter(filters);

@@ -6,41 +6,35 @@ import CardHeader from "@material-ui/core/CardHeader";
 import Typography from "@material-ui/core/Typography";
 import { makeStyles } from "@material-ui/styles";
 
-import ViewCustomerInfo from "./ViewCustomerInfo";
-import ViewCustomerCredit from "./ViewCustomerCredit";
+import ViewCategoryInfo from "./ViewCategoryInfo";
+import ViewProducts from "./ViewProducts";
 
 const DUMMY_DATA = {
-	customerNo: "CRM202202-0001",
-	lastName: "TEST1",
-	firstName: "TEST1L",
-	middleInitial: "A",
-	phoneNumber: "11112223333",
-	email: "email@email.com",
-	address: "Some address at this address",
-	birthDate: "2021-12-12",
-	status: "ACTIVE",
+	code: "BIS",
+	name: "BISCUIT",
+	status: "IN-USE",
 };
 
-const DUMMY_ORDER_DATA = [
+const DUMMY_PRODUCT_DATA = [
 	{
-		poNo: "PONO202202-0001",
-		credit: 100,
-		createdDate: "2022-02-18T15:49:04.781Z",
+		code: "PROD1",
+		name: "PRODUCT1",
+		quantity: 100,
 	},
 	{
-		poNo: "PONO202202-0002",
-		credit: 120,
-		createdDate: "2022-02-18T15:49:04.781Z",
+		code: "PROD2",
+		name: "PRODUCT2",
+		quantity: 100,
 	},
 	{
-		poNo: "PONO202202-0003",
-		credit: 130,
-		createdDate: "2022-02-18T15:49:04.781Z",
+		code: "PROD3",
+		name: "PRODUCT3",
+		quantity: 100,
 	},
 	{
-		poNo: "PONO202202-0004",
-		credit: 50,
-		createdDate: "2022-02-18T15:49:04.781Z",
+		code: "PROD4",
+		name: "PRODUCT4",
+		quantity: 100,
 	},
 ];
 
@@ -64,7 +58,7 @@ const useStyles = makeStyles((theme) => {
 	};
 });
 
-const ViewCustomer = (props) => {
+const ViewCategory = (props) => {
 	const classes = useStyles();
 
 	return (
@@ -79,7 +73,7 @@ const ViewCustomer = (props) => {
 					}
 				/>
 				<CardContent className={classes.cardContent}>
-					<ViewCustomerInfo data={DUMMY_DATA} />
+					<ViewCategoryInfo data={DUMMY_DATA} />
 				</CardContent>
 			</Card>
 			<Card variant="outlined" className={classes.card}>
@@ -87,16 +81,16 @@ const ViewCustomer = (props) => {
 					className={classes.cardHeader}
 					title={
 						<Typography variant="h6" color="primary">
-							Credit Information
+							Products who uses this category
 						</Typography>
 					}
 				/>
 				<CardContent className={classes.cardContent}>
-					<ViewCustomerCredit data={DUMMY_ORDER_DATA} />
+					<ViewProducts data={DUMMY_PRODUCT_DATA} />
 				</CardContent>
 			</Card>
 		</div>
 	);
 };
 
-export default ViewCustomer;
+export default ViewCategory;

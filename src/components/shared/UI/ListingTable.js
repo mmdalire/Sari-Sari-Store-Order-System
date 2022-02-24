@@ -62,6 +62,10 @@ const ListingTable = (props) => {
 				return <Chip label="CANCELLED" className={classes.danger} />;
 			case "INACTIVE":
 				return <Chip label="INACTIVE" className={classes.danger} />;
+			case "IN-USE":
+				return <Chip label="IN-USE" className={classes.danger} />;
+			case "UNUSED":
+				return <Chip label="UNUSED" className={classes.success} />;
 		}
 	};
 

@@ -45,9 +45,14 @@ const OptionMenu = (props) => {
 			>
 				{props.availableMenu
 					// Filter options based on the current status
-					.filter((option) =>
-						option.activateIn.includes(props.status)
-					)
+					.filter((option) => {
+						//If status is irrelevant, display ALL options for that page
+						if (!props.status) {
+							return true;
+						}
+						//If the options are dependent on the status of a record
+						return option.activateIn.includes(props.status);
+					})
 					//Iterate each menu
 					.map((option) => (
 						<MenuItem

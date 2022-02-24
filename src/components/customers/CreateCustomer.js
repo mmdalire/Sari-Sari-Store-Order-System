@@ -8,6 +8,8 @@ import TextField from "@material-ui/core/TextField";
 import { makeStyles } from "@material-ui/styles";
 import { green } from "@material-ui/core/colors";
 
+import { formValid } from "../../utils/utilities";
+
 const useStyles = makeStyles((theme) => {
 	return {
 		root: {
@@ -64,12 +66,6 @@ const birthOptions = {
 	},
 };
 
-const formValidCheck = (form) => {
-	return Object.keys(form).every((field) => {
-		return form[field].hasError === false && form[field].hasTouched;
-	});
-};
-
 const CreateCustomer = (props) => {
 	const classes = useStyles();
 
@@ -114,7 +110,7 @@ const CreateCustomer = (props) => {
 			newFieldData.firstName.error = "";
 		}
 
-		setIsFormValid(formValidCheck(newFieldData));
+		setIsFormValid(formValid(newFieldData));
 		setFieldData(newFieldData);
 	};
 
@@ -131,7 +127,7 @@ const CreateCustomer = (props) => {
 			newFieldData.lastName.error = "";
 		}
 
-		setIsFormValid(formValidCheck(newFieldData));
+		setIsFormValid(formValid(newFieldData));
 		setFieldData(newFieldData);
 	};
 
@@ -159,7 +155,7 @@ const CreateCustomer = (props) => {
 			newFieldData.email.error = "";
 		}
 
-		setIsFormValid(formValidCheck(newFieldData));
+		setIsFormValid(formValid(newFieldData));
 		setFieldData(newFieldData);
 	};
 
@@ -177,7 +173,7 @@ const CreateCustomer = (props) => {
 			newFieldData.phoneNumber.error = "";
 		}
 
-		setIsFormValid(formValidCheck(newFieldData));
+		setIsFormValid(formValid(newFieldData));
 		setFieldData(newFieldData);
 	};
 
@@ -198,7 +194,7 @@ const CreateCustomer = (props) => {
 			newFieldData.birthMonth.error = "";
 		}
 
-		setIsFormValid(formValidCheck(newFieldData));
+		setIsFormValid(formValid(newFieldData));
 		setFieldData(newFieldData);
 	};
 
@@ -219,7 +215,7 @@ const CreateCustomer = (props) => {
 			newFieldData.birthDay.error = "";
 		}
 
-		setIsFormValid(formValidCheck(newFieldData));
+		setIsFormValid(formValid(newFieldData));
 		setFieldData(newFieldData);
 	};
 
@@ -236,7 +232,7 @@ const CreateCustomer = (props) => {
 			newFieldData.birthYear.error = "";
 		}
 
-		setIsFormValid(formValidCheck(newFieldData));
+		setIsFormValid(formValid(newFieldData));
 		setFieldData(newFieldData);
 	};
 
@@ -253,7 +249,7 @@ const CreateCustomer = (props) => {
 			newFieldData.address.error = "";
 		}
 
-		setIsFormValid(formValidCheck(newFieldData));
+		setIsFormValid(formValid(newFieldData));
 		setFieldData(newFieldData);
 	};
 
