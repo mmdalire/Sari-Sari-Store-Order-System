@@ -2,7 +2,6 @@ import React, { useState } from "react";
 
 import { makeStyles } from "@material-ui/core/styles";
 import Chip from "@material-ui/core/Chip";
-import IconButton from "@material-ui/core/IconButton";
 import Paper from "@material-ui/core/Paper";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
@@ -11,62 +10,21 @@ import TableContainer from "@material-ui/core/TableContainer";
 import TableHead from "@material-ui/core/TableHead";
 import TablePagination from "@material-ui/core/TablePagination";
 import TableRow from "@material-ui/core/TableRow";
-import { green, red } from "@material-ui/core/colors";
+import { blue, green, red } from "@material-ui/core/colors";
 
 import AvatarTemplate from "./AvatarTemplate";
 import OptionMenu from "./OptionMenu";
-
-const headers = {
-	customers: [
-		{ id: "avatar", label: "Avatar" },
-		{ id: "customerNo", label: "Customer Number" },
-		{ id: "lastName", label: "Last Name", minWidth: 120 },
-		{ id: "firstName", label: "First Name", minWidth: 150 },
-		{ id: "middleInitial", label: "Middle Initial" },
-		{ id: "status", label: "Status" },
-		{ id: "actions", label: "", minWidth: 5 },
-	],
-	categories: [
-		{ id: "code", label: "Category code" },
-		{ id: "name", label: "Name" },
-		{ id: "actions", label: "", minWidth: 5 },
-	],
-	products: [
-		{ id: "code", label: "Product code" },
-		{ id: "name", label: "Name" },
-		{ id: "category", label: "Category" },
-		{ id: "unit", label: "Unit" },
-		{ id: "price", label: "Price" },
-		{ id: "cost", label: "Cost" },
-		{ id: "quantity", label: "Quantity" },
-		{ id: "actions", label: "", minWidth: 5 },
-	],
-	orders: [
-		{ id: "poNo", label: "Order Number" },
-		{ id: "customer", label: "Customer Name" },
-		{ id: "totalProducts", label: "Number of products" },
-		{ id: "totalPrice", label: "Total Price" },
-		{ id: "totalCost", label: "Total Cost" },
-		{ id: "totalReturnedPrice", label: "Total Price Returned" },
-		{ id: "orderDate", label: "Order Date" },
-		{ id: "status", label: "Status" },
-		{ id: "actions", label: "", minWidth: 5 },
-	],
-	purchaseReturns: [
-		{ id: "prtNo", label: "Purchase Return Number" },
-		{ id: "poNo", label: "Order Number" },
-		{ id: "returnedTotalPrice", label: "Total Price Returned" },
-		{ id: "returnedTotalQuantity", label: "Total Quantity Returned" },
-		{ id: "returnDate", label: "Return Date" },
-		{ id: "actions", label: "", minWidth: 5 },
-	],
-};
 
 const useStyles = makeStyles((theme) => {
 	return {
 		root: {
 			width: "100%",
 			marginTop: theme.spacing(2),
+		},
+		tableHeaderFooter: {
+			backgroundColor: blue[500],
+			color: "white",
+			fontWeight: "bold",
 		},
 		normal: {
 			fontWeight: "bold",
@@ -102,7 +60,16 @@ const ListingTable = (props) => {
 				return <Chip label="DRAFTED" className={classes.normal} />;
 			case "CANCELLED":
 				return <Chip label="CANCELLED" className={classes.danger} />;
+			case "INACTIVE":
+				return <Chip label="INACTIVE" className={classes.danger} />;
 		}
+	};
+
+	const creditStatus = (credit) => {
+		if (parseInt(credit) > 0) {
+			return <Chip label={credit} className={classes.danger} />;
+		}
+		return credit;
 	};
 
 	const handlePageChange = (e) => {
@@ -118,9 +85,10 @@ const ListingTable = (props) => {
 	const tableHeader = (
 		<TableHead>
 			<TableRow>
-				{headers[props.entity].map((header) => {
+				{props.headers.map((header) => {
 					return (
 						<TableCell
+							className={classes.tableHeaderFooter}
 							key={header.id}
 							align="center"
 							style={
@@ -142,7 +110,7 @@ const ListingTable = (props) => {
 			{props.data.map((row) => {
 				return (
 					<TableRow hover key={row.customerNo}>
-						{headers[props.entity].map((header) => {
+						{props.headers.map((header) => {
 							let value;
 							if (header.id === "avatar") {
 								value = <AvatarTemplate data={row} />;
@@ -151,10 +119,15 @@ const ListingTable = (props) => {
 							} else if (header.id === "actions") {
 								value = (
 									<OptionMenu
-										entity={props.entity}
+										onHandleModalConfig={
+											props.onHandleModalConfig
+										}
+										availableMenu={props.availableMenu}
 										status={row.status}
 									/>
 								);
+							} else if (header.id === "credit") {
+								value = creditStatus(row.credit);
 							} else {
 								value = row[header.id];
 							}
@@ -173,6 +146,7 @@ const ListingTable = (props) => {
 
 	const tablePagination = (
 		<TablePagination
+			className={classes.tableHeaderFooter}
 			rowsPerPageOptions={[10, 25, 50, 75, 100]}
 			component="div"
 			count={100}

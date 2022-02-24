@@ -38,6 +38,23 @@ const DUMMY_ROWS = [
 	},
 ];
 
+const tableHeaders = [
+	{ id: "code", label: "Product code" },
+	{ id: "name", label: "Name" },
+	{ id: "category", label: "Category" },
+	{ id: "unit", label: "Unit" },
+	{ id: "price", label: "Price" },
+	{ id: "cost", label: "Cost" },
+	{ id: "quantity", label: "Quantity" },
+	{ id: "actions", label: "", minWidth: 5 },
+];
+
+const optionMenus = [
+	{ id: "view", label: "View", activateIn: ["ACTIVE"] },
+	{ id: "edit", label: "Edit", activateIn: ["ACTIVE"] },
+	{ id: "delete", label: "Delete", activateIn: ["ACTIVE"] },
+];
+
 const Products = () => {
 	const [filter, setFilter] = useState({});
 	const [limit, setLimit] = useState(1);
@@ -70,10 +87,11 @@ const Products = () => {
 				Add Product
 			</Button>
 			<ListingTable
-				entity="products"
+				headers={tableHeaders}
 				data={DUMMY_ROWS}
 				limit={limit}
 				page={page}
+				availableMenu={optionMenus}
 				onHandleLimit={handleLimit}
 				onHandlePage={handlePage}
 			/>

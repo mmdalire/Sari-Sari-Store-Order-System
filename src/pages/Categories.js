@@ -31,6 +31,17 @@ const DUMMY_ROWS = [
 	},
 ];
 
+const tableHeaders = [
+	{ id: "code", label: "Category code" },
+	{ id: "name", label: "Name" },
+	{ id: "actions", label: "", minWidth: 5 },
+];
+
+const optionMenus = [
+	{ id: "edit", label: "Edit", activateIn: ["ACTIVE"] },
+	{ id: "delete", label: "Delete", activateIn: ["ACTIVE"] },
+];
+
 const Categories = () => {
 	const [filter, setFilter] = useState({});
 	const [limit, setLimit] = useState(1);
@@ -63,10 +74,11 @@ const Categories = () => {
 				Add Category
 			</Button>
 			<ListingTable
-				entity="categories"
+				headers={tableHeaders}
 				data={DUMMY_ROWS}
 				limit={limit}
 				page={page}
+				availableMenu={optionMenus}
 				onHandleLimit={handleLimit}
 				onHandlePage={handlePage}
 			/>

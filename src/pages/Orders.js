@@ -15,8 +15,8 @@ const DUMMY_ROWS = [
 		customer: "TEST1 TESTL1",
 		totalProducts: 20,
 		totalPrice: 200,
-		totalCost: 100,
 		totalReturnedPrice: 0,
+		credit: 0,
 		orderDate: moment("2022-02-18T15:49:04.781Z").format(
 			"MMMM Do YYYY, h:mm:ss a"
 		),
@@ -27,8 +27,8 @@ const DUMMY_ROWS = [
 		customer: "TEST2 TESTL2",
 		totalProducts: 20,
 		totalPrice: 200,
-		totalCost: 100,
 		totalReturnedPrice: 0,
+		credit: 0,
 		orderDate: moment("2022-02-18T15:49:04.781Z").format(
 			"MMMM Do YYYY, h:mm:ss a"
 		),
@@ -39,8 +39,8 @@ const DUMMY_ROWS = [
 		customer: "TEST3 TESTL3",
 		totalProducts: 20,
 		totalPrice: 200,
-		totalCost: 100,
 		totalReturnedPrice: 0,
+		credit: 0,
 		orderDate: moment("2022-02-18T15:49:04.781Z").format(
 			"MMMM Do YYYY, h:mm:ss a"
 		),
@@ -51,8 +51,8 @@ const DUMMY_ROWS = [
 		customer: "TEST4 TESTL4",
 		totalProducts: 20,
 		totalPrice: 200,
-		totalCost: 100,
 		totalReturnedPrice: 0,
+		credit: 0,
 		orderDate: moment("2022-02-18T15:49:04.781Z").format(
 			"MMMM Do YYYY, h:mm:ss a"
 		),
@@ -63,8 +63,8 @@ const DUMMY_ROWS = [
 		customer: "TEST5 TESTL5",
 		totalProducts: 20,
 		totalPrice: 200,
-		totalCost: 100,
 		totalReturnedPrice: 0,
+		credit: 0,
 		orderDate: moment("2022-02-18T15:49:04.781Z").format(
 			"MMMM Do YYYY, h:mm:ss a"
 		),
@@ -75,8 +75,8 @@ const DUMMY_ROWS = [
 		customer: "TEST6 TESTL6",
 		totalProducts: 20,
 		totalPrice: 200,
-		totalCost: 100,
 		totalReturnedPrice: 0,
+		credit: 1,
 		orderDate: moment("2022-02-18T15:49:04.781Z").format(
 			"MMMM Do YYYY, h:mm:ss a"
 		),
@@ -84,7 +84,29 @@ const DUMMY_ROWS = [
 	},
 ];
 
-const Products = () => {
+const tableHeaders = [
+	{ id: "poNo", label: "Order Number", minWidth: 150 },
+	{ id: "customer", label: "Customer Name", minWidth: 100 },
+	{ id: "totalProducts", label: "Number of products" },
+	{ id: "totalPrice", label: "Total Amount" },
+	{ id: "credit", label: "Credit" },
+	{ id: "totalReturnedPrice", label: "Total Price Returned" },
+	{ id: "orderDate", label: "Order Date" },
+	{ id: "status", label: "Status" },
+	{ id: "actions", label: "", minWidth: 5 },
+];
+
+const optionMenu = [
+	{
+		id: "view",
+		label: "View",
+		activateIn: ["DRAFT", "SUBMIT", "CANCELLED"],
+	},
+	{ id: "edit", label: "Edit", activateIn: ["DRAFT"] },
+	{ id: "cancel", label: "Cancel", activateIn: ["DRAFT"] },
+];
+
+const Orders = () => {
 	const [filter, setFilter] = useState({});
 	const [limit, setLimit] = useState(1);
 	const [page, setPage] = useState(1);
@@ -116,10 +138,11 @@ const Products = () => {
 				Add Order
 			</Button>
 			<ListingTable
-				entity="orders"
+				headers={tableHeaders}
 				data={DUMMY_ROWS}
 				limit={limit}
 				page={page}
+				availableMenu={optionMenu}
 				onHandleLimit={handleLimit}
 				onHandlePage={handlePage}
 			/>
@@ -127,4 +150,4 @@ const Products = () => {
 	);
 };
 
-export default Products;
+export default Orders;

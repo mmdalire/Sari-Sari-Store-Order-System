@@ -39,7 +39,24 @@ const DUMMY_ROWS = [
 	},
 ];
 
-const Products = () => {
+const tableHeaders = [
+	{ id: "prtNo", label: "Purchase Return Number" },
+	{ id: "poNo", label: "Order Number", minWidth: 150 },
+	{ id: "returnedTotalPrice", label: "Total Price Returned" },
+	{ id: "returnedTotalQuantity", label: "Total Quantity Returned" },
+	{ id: "returnDate", label: "Return Date" },
+	{ id: "actions", label: "", minWidth: 5 },
+];
+
+const optionMenu = [
+	{
+		id: "view",
+		label: "View",
+		activateIn: ["ACTIVE"],
+	},
+];
+
+const PurchaseReturns = () => {
 	const [filter, setFilter] = useState({});
 	const [limit, setLimit] = useState(1);
 	const [page, setPage] = useState(1);
@@ -74,10 +91,11 @@ const Products = () => {
 				Add Purchase Return
 			</Button>
 			<ListingTable
-				entity="purchaseReturns"
+				headers={tableHeaders}
 				data={DUMMY_ROWS}
 				limit={limit}
 				page={page}
+				availableMenu={optionMenu}
 				onHandleLimit={handleLimit}
 				onHandlePage={handlePage}
 			/>
@@ -85,4 +103,4 @@ const Products = () => {
 	);
 };
 
-export default Products;
+export default PurchaseReturns;

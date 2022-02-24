@@ -71,6 +71,14 @@ const sortFields = {
 		{ value: "returnedtotalprice", label: "Total Price Returned" },
 		{ value: "returnedtotalquantity", label: "Total Quantity Returned" },
 	],
+	inventory: [
+		{ value: "createddate", label: "Created Date" },
+		{ value: "updateddate", label: "Last Updated" },
+		{ value: "name", label: "Name" },
+		{ value: "category", label: "Category" },
+		{ value: "code", label: "Code" },
+		{ value: "quantity", label: "Quantity" },
+	],
 };
 
 const orderField = [
@@ -84,7 +92,7 @@ const FilterForm = (props) => {
 		search: "",
 		sort: "createddate",
 		order: "desc",
-		aditional: {
+		additional: {
 			isBlackListed: false,
 		},
 	});
@@ -93,7 +101,7 @@ const FilterForm = (props) => {
 		const newState = {
 			...filterParams,
 		};
-		newState.customers.isBlackListed = e.target.checked;
+		newState.additional.isBlackListed = e.target.checked;
 
 		setFilterParams(newState);
 	};
@@ -110,7 +118,7 @@ const FilterForm = (props) => {
 		setFilterParams({ ...filterParams, search: e.target.value });
 	};
 
-	const handleSearchBtn = (e) => {
+	const handleSearchSubmit = (e) => {
 		e.preventDefault();
 
 		props.onHandleFilters(filterParams);
@@ -190,13 +198,17 @@ const FilterForm = (props) => {
 	);
 
 	return (
-		<form className={classes.form} noValidate autoComplete="off">
+		<form
+			className={classes.form}
+			onSubmit={handleSearchSubmit}
+			noValidate
+			autoComplete="off"
+		>
 			{sortFilter}
 			{orderFilter}
 			{additionalCustomerFilter}
 			{searchFilter}
 			<Button
-				onClick={handleSearchBtn}
 				size="small"
 				variant="contained"
 				type="submit"

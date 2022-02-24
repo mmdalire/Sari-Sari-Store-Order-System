@@ -2,7 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import { createTheme, ThemeProvider } from "@material-ui/core";
-import { blue, amber } from "@material-ui/core/colors";
+import { blue, amber, green } from "@material-ui/core/colors";
 
 import MainNavigation from "./components/shared/navigation/MainNavigation";
 import Categories from "./pages/Categories";
