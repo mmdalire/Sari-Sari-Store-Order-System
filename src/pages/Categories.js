@@ -164,7 +164,7 @@ const Categories = () => {
 		}
 	};
 
-	const categortBody = () => {
+	const categoryBody = () => {
 		switch (modalConfig.operation) {
 			case "add":
 				return <CreateCategory onSave={handleAddCategory} />;
@@ -173,7 +173,7 @@ const Categories = () => {
 			case "edit":
 				return <EditCategory />;
 			case "delete":
-				return <DeleteCategory />;
+				return <DeleteCategory onCancel={handleCloseModal} />;
 		}
 	};
 
@@ -189,7 +189,7 @@ const Categories = () => {
 				modalTitle={modalConfig.title}
 				modalIcon={modalConfig.icon}
 			>
-				{categortBody()}
+				{categoryBody()}
 			</ModalTemplate>
 			{/* Listing */}
 			<Container>

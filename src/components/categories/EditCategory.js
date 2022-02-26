@@ -42,7 +42,7 @@ const EditCategory = (props) => {
 		name: { value: DUMMY_DATA.name, hasError: false, error: "" },
 		code: { value: DUMMY_DATA.code, hasError: false, error: "" },
 	});
-	const [isFormValid, setIsFormValid] = useState(false);
+	const [isFormValid, setIsFormValid] = useState(true);
 
 	const handleName = (e) => {
 		const newFieldData = { ...fieldData };

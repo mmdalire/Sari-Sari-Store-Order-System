@@ -1,5 +1,3 @@
-import createPalette from "@material-ui/core/styles/createPalette";
-
 /**
  * @desc Make sure that the form is valid based on the hasError field which should be false
  * @param {object} data - To be examined if the form is valid

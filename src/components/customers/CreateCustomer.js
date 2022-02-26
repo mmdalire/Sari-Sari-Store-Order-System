@@ -20,6 +20,7 @@ const useStyles = makeStyles((theme) => {
 		},
 		textField: {
 			width: "100%",
+			backgroundColor: "white",
 		},
 		success: {
 			backgroundColor: green[100],
