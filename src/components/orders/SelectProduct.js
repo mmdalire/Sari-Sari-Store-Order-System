@@ -1,10 +1,7 @@
 import React, { useState } from "react";
 
-import Container from "@material-ui/core/Container";
-
-import FilterForm from "../components/shared/form/FilterForm";
-import ListingTable from "../components/shared/UI/ListingTable";
-import PageTitle from "../components/shared/UI/PageTitle";
+import FilterForm from "../shared/form/FilterForm";
+import ListingTable from "../shared/UI/ListingTable";
 
 const DUMMY_ROWS = [
 	{
@@ -15,7 +12,7 @@ const DUMMY_ROWS = [
 		price: 10,
 		cost: 20,
 		quantity: 20,
-		status: "ACTIVE",
+		status: "IN-USE",
 	},
 	{
 		code: "PRD2",
@@ -25,7 +22,7 @@ const DUMMY_ROWS = [
 		price: 15,
 		cost: 25,
 		quantity: 25,
-		status: "INACTIVE",
+		status: "IN-USE",
 	},
 	{
 		code: "PRD3",
@@ -35,7 +32,7 @@ const DUMMY_ROWS = [
 		price: 20,
 		cost: 30,
 		quantity: 30,
-		status: "ACTIVE",
+		status: "UNUSED",
 	},
 ];
 
@@ -43,30 +40,25 @@ const sortFields = [
 	{ value: "createddate", label: "Created Date" },
 	{ value: "updateddate", label: "Last Updated" },
 	{ value: "name", label: "Name" },
-	{ value: "category", label: "Category" },
 	{ value: "code", label: "Code" },
 	{ value: "quantity", label: "Quantity" },
+	{ value: "price", label: "Price" },
+	{ value: "cost", label: "Cost" },
+	{ value: "category", label: "Category" },
 ];
 
 const tableHeaders = [
-	{ id: "code", label: "Product Code" },
-	{ id: "name", label: "Product Name" },
+	{ id: "code", label: "Product code" },
+	{ id: "name", label: "Name", minWidth: 150 },
 	{ id: "category", label: "Category" },
-	{ id: "quantity", label: "Current quantity" },
 	{ id: "unit", label: "Unit" },
-	{ id: "status", label: "Status" },
-	{ id: "actions", label: "", minWidth: 5 },
+	{ id: "price", label: "Price" },
+	{ id: "cost", label: "Cost" },
+	{ id: "quantity", label: "Quantity" },
+	{ id: "selectProduct", label: "" },
 ];
 
-const optionMenu = [
-	{
-		id: "view",
-		label: "View",
-		activateIn: ["ACTIVE", "INACTIVE"],
-	},
-];
-
-const Inventory = () => {
+const SelectProduct = (props) => {
 	const [filter, setFilter] = useState({});
 	const [limit, setLimit] = useState(1);
 	const [page, setPage] = useState(1);
@@ -85,21 +77,24 @@ const Inventory = () => {
 		setPage(page);
 	};
 
+	const handleSelect = (selectProduct) => {
+		props.onHandleSelect(selectProduct);
+	};
+
 	return (
-		<Container>
-			<PageTitle title="Inventory" />
+		<div style={{ marginTop: "10px" }}>
 			<FilterForm sort={sortFields} onHandleFilters={handleFilter} />
 			<ListingTable
 				headers={tableHeaders}
 				data={DUMMY_ROWS}
 				limit={limit}
 				page={page}
-				availableMenu={optionMenu}
 				onHandleLimit={handleLimit}
 				onHandlePage={handlePage}
+				onHandleSelect={handleSelect}
 			/>
-		</Container>
+		</div>
 	);
 };
 
-export default Inventory;
+export default SelectProduct;

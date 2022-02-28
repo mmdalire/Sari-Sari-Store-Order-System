@@ -2,10 +2,7 @@ import React, { useState } from "react";
 
 import Button from "@material-ui/core/Button";
 import Checkbox from "@material-ui/core/Checkbox";
-import FormControl from "@material-ui/core/FormControl";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
-import FormGroup from "@material-ui/core/FormGroup";
-import FormLabel from "@material-ui/core/FormLabel";
 import MenuItem from "@material-ui/core/MenuItem";
 import SearchIcon from "@material-ui/icons/Search";
 import TextField from "@material-ui/core/TextField";
@@ -28,58 +25,6 @@ const useStyles = makeStyles((theme) => {
 		},
 	};
 });
-
-const sortFields = {
-	customers: [
-		{ value: "createddate", label: "Created Date" },
-		{ value: "updateddate", label: "Last Updated" },
-		{ value: "customerno", label: "Customer Number" },
-		{ value: "lastname", label: "Lastname" },
-		{ value: "firstname", label: "Firstname" },
-		{ value: "isblacklisted", label: "Status" },
-	],
-	categories: [
-		{ value: "createddate", label: "Created Date" },
-		{ value: "updateddate", label: "Last Updated" },
-		{ value: "name", label: "Name" },
-		{ value: "code", label: "Code" },
-	],
-	products: [
-		{ value: "createddate", label: "Created Date" },
-		{ value: "updateddate", label: "Last Updated" },
-		{ value: "name", label: "Name" },
-		{ value: "code", label: "Code" },
-		{ value: "quantity", label: "Quantity" },
-		{ value: "price", label: "Price" },
-		{ value: "cost", label: "Cost" },
-		{ value: "category", label: "Category" },
-	],
-	orders: [
-		{ value: "createddate", label: "Created Date" },
-		{ value: "updateddate", label: "Last Updated" },
-		{ value: "pono", label: "Order Number" },
-		{ value: "status", label: "Status" },
-		{ value: "customer", label: "Customer" },
-		{ value: "totalprice", label: "Total Amount" },
-		{ value: "totalproducts", label: "Products Bought" },
-	],
-	purchaseReturns: [
-		{ value: "createddate", label: "Created Date" },
-		{ value: "updateddate", label: "Last Updated" },
-		{ value: "prtno", label: "Purchase Return Number" },
-		{ value: "pono", label: "Order Number" },
-		{ value: "returnedtotalprice", label: "Total Price Returned" },
-		{ value: "returnedtotalquantity", label: "Total Quantity Returned" },
-	],
-	inventory: [
-		{ value: "createddate", label: "Created Date" },
-		{ value: "updateddate", label: "Last Updated" },
-		{ value: "name", label: "Name" },
-		{ value: "category", label: "Category" },
-		{ value: "code", label: "Code" },
-		{ value: "quantity", label: "Quantity" },
-	],
-};
 
 const orderField = [
 	{ value: "asc", label: "Ascending" },
@@ -133,7 +78,7 @@ const FilterForm = (props) => {
 			value={filterParams.sort}
 			onChange={handleSortChange}
 		>
-			{sortFields[props.entity].map((option) => {
+			{props.sort.map((option) => {
 				return (
 					<MenuItem key={option.value} value={option.value}>
 						{option.label}
@@ -163,7 +108,7 @@ const FilterForm = (props) => {
 
 	let additionalCustomerFilter;
 	//Set the appropriate filter options per entity
-	if (props.entity === "customers") {
+	if (props.isBlacklisted) {
 		//Is blacklisted filter
 		additionalCustomerFilter = (
 			<FormControlLabel

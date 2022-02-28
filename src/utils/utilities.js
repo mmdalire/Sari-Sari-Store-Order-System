@@ -6,6 +6,7 @@
  */
 export const formValid = (data, includeTouched = true) => {
 	return Object.keys(data).every((field) => {
+		// console.log(field, data[field].hasError, data[field].hasTouched);
 		if (includeTouched) {
 			return data[field].hasError === false && data[field].hasTouched;
 		}

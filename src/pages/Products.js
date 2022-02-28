@@ -51,6 +51,17 @@ const DUMMY_ROWS = [
 	},
 ];
 
+const sortFields = [
+	{ value: "createddate", label: "Created Date" },
+	{ value: "updateddate", label: "Last Updated" },
+	{ value: "name", label: "Name" },
+	{ value: "code", label: "Code" },
+	{ value: "quantity", label: "Quantity" },
+	{ value: "price", label: "Price" },
+	{ value: "cost", label: "Cost" },
+	{ value: "category", label: "Category" },
+];
+
 const tableHeaders = [
 	{ id: "code", label: "Product code" },
 	{ id: "name", label: "Name" },
@@ -225,7 +236,7 @@ const Products = () => {
 			{/* Listing */}
 			<Container>
 				<PageTitle title="Products" />
-				<FilterForm entity="products" onHandleFilters={handleFilter} />
+				<FilterForm sort={sortFields} onHandleFilters={handleFilter} />
 				<Button
 					variant="contained"
 					color="primary"

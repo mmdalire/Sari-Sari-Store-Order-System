@@ -39,6 +39,15 @@ const DUMMY_ROWS = [
 	},
 ];
 
+const sortFields = [
+	{ value: "createddate", label: "Created Date" },
+	{ value: "updateddate", label: "Last Updated" },
+	{ value: "prtno", label: "Purchase Return Number" },
+	{ value: "pono", label: "Order Number" },
+	{ value: "returnedtotalprice", label: "Total Price Returned" },
+	{ value: "returnedtotalquantity", label: "Total Quantity Returned" },
+];
+
 const tableHeaders = [
 	{ id: "prtNo", label: "Purchase Return Number" },
 	{ id: "poNo", label: "Order Number", minWidth: 150 },
@@ -78,10 +87,7 @@ const PurchaseReturns = () => {
 	return (
 		<Container>
 			<PageTitle title="Purchase Returns" />
-			<FilterForm
-				entity="purchaseReturns"
-				onHandleFilters={handleFilter}
-			/>
+			<FilterForm sort={sortFields} onHandleFilters={handleFilter} />
 			<Button
 				variant="contained"
 				color="primary"

@@ -30,6 +30,15 @@ const DUMMY_ROWS = [
 	},
 ];
 
+const sortFields = [
+	{ value: "createddate", label: "Created Date" },
+	{ value: "updateddate", label: "Last Updated" },
+	{ value: "customerno", label: "Customer Number" },
+	{ value: "lastname", label: "Lastname" },
+	{ value: "firstname", label: "Firstname" },
+	{ value: "isblacklisted", label: "Status" },
+];
+
 const tableHeaders = [
 	{ id: "avatar", label: "Avatar" },
 	{ id: "customerNo", label: "Customer Number" },
@@ -221,7 +230,11 @@ const Customers = () => {
 			{/* Listing */}
 			<Container>
 				<PageTitle title="Customers" />
-				<FilterForm entity="customers" onHandleFilters={handleFilter} />
+				<FilterForm
+					sort={sortFields}
+					isBlacklisted
+					onHandleFilters={handleFilter}
+				/>
 				<Button
 					variant="contained"
 					color="primary"

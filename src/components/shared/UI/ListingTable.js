@@ -1,15 +1,19 @@
 import React, { useState } from "react";
 
 import { makeStyles } from "@material-ui/core/styles";
+import AddIcon from "@material-ui/icons/Add";
+import Button from "@material-ui/core/Button";
 import Chip from "@material-ui/core/Chip";
 import Paper from "@material-ui/core/Paper";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
 import TableContainer from "@material-ui/core/TableContainer";
+import TableFooter from "@material-ui/core/TableFooter";
 import TableHead from "@material-ui/core/TableHead";
 import TablePagination from "@material-ui/core/TablePagination";
 import TableRow from "@material-ui/core/TableRow";
+import Typography from "@material-ui/core/Typography";
 import { blue, green, red } from "@material-ui/core/colors";
 
 import AvatarTemplate from "./AvatarTemplate";
@@ -86,6 +90,25 @@ const ListingTable = (props) => {
 		props.onHandleLimit(limit);
 	};
 
+	const handleSelectCustomer = (data) => {
+		props.onHandleSelect(data);
+	};
+
+	const handleSelectProduct = (data) => {
+		const productData = {
+			name: data.name,
+			category: data.category,
+			code: data.code,
+			price: data.price,
+			cost: data.cost,
+			quantity: data.quantity,
+			orderQuantity: 0,
+			subtotal: "-",
+		};
+
+		props.onHandleSelect(productData);
+	};
+
 	const tableHeader = (
 		<TableHead>
 			<TableRow>
@@ -113,7 +136,7 @@ const ListingTable = (props) => {
 		<TableBody>
 			{props.data.map((row) => {
 				return (
-					<TableRow hover key={row.customerNo}>
+					<TableRow hover key={row._id}>
 						{props.headers.map((header) => {
 							let value;
 							if (header.id === "avatar") {
@@ -130,6 +153,36 @@ const ListingTable = (props) => {
 										status={row.status}
 									/>
 								);
+							}
+							//This column is for selection of customers (in CREATING orders)
+							else if (header.id === "selectCustomer") {
+								value = (
+									<Button
+										variant="contained"
+										color="primary"
+										onClick={() =>
+											handleSelectCustomer(row)
+										}
+									>
+										<AddIcon />
+									</Button>
+								);
+							}
+							//This column is for selection of products (in CREATING orders)
+							else if (header.id === "selectProduct") {
+								value = (
+									<Button
+										variant="contained"
+										color="primary"
+										onClick={() => handleSelectProduct(row)}
+									>
+										<AddIcon />
+									</Button>
+								);
+							}
+							//This column is for computing of subtotal per product (in VIEWING orders)
+							else if (header.id === "subtotal") {
+								value = row.price * row.quantity;
 							} else if (header.id === "credit") {
 								value = creditStatus(row.credit);
 							} else {
@@ -137,7 +190,10 @@ const ListingTable = (props) => {
 							}
 
 							return (
-								<TableCell key={header.id} align="center">
+								<TableCell
+									key={header.id}
+									align={header.align || "center"}
+								>
 									{value}
 								</TableCell>
 							);
@@ -148,18 +204,56 @@ const ListingTable = (props) => {
 		</TableBody>
 	);
 
-	const tablePagination = (
-		<TablePagination
-			className={classes.tableHeaderFooter}
-			rowsPerPageOptions={[10, 25, 50, 75, 100]}
-			component="div"
-			count={100}
-			rowsPerPage={limit}
-			page={page}
-			onPageChange={handlePageChange}
-			onRowsPerPageChange={handleLimitChange}
-		/>
-	);
+	let tableFooter;
+	if (props.total) {
+		tableFooter = (
+			<TableFooter>
+				<TableRow>
+					<TableCell
+						colSpan={props.headers.length - 1}
+						style={{
+							textAlign: "right",
+						}}
+					>
+						<Typography
+							style={{ fontWeight: "bold", color: "black" }}
+							gutterBottom
+						>
+							TOTAL AMOUNT :
+						</Typography>
+					</TableCell>
+					<TableCell>
+						<Typography
+							style={{
+								textAlign: "right",
+								color: "black",
+								fontWeight: "bold",
+							}}
+						>
+							{props.total}
+						</Typography>
+					</TableCell>
+				</TableRow>
+			</TableFooter>
+		);
+	}
+
+	let tablePagination;
+
+	if (props.limit && props.page) {
+		tablePagination = (
+			<TablePagination
+				className={classes.tableHeaderFooter}
+				rowsPerPageOptions={[10, 25, 50, 75, 100]}
+				component="div"
+				count={100}
+				rowsPerPage={limit}
+				page={page}
+				onPageChange={handlePageChange}
+				onRowsPerPageChange={handleLimitChange}
+			/>
+		);
+	}
 
 	return (
 		<Paper className={classes.root}>
@@ -167,6 +261,7 @@ const ListingTable = (props) => {
 				<Table stickyheader="true">
 					{tableHeader}
 					{tableBody}
+					{tableFooter}
 				</Table>
 			</TableContainer>
 			{tablePagination}
