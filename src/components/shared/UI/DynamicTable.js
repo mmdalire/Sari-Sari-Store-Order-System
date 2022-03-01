@@ -10,7 +10,6 @@ import TableContainer from "@material-ui/core/TableContainer";
 import TableFooter from "@material-ui/core/TableFooter";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
-import TextField from "@material-ui/core/TextField";
 import Typography from "@material-ui/core/Typography";
 import { blue, red } from "@material-ui/core/colors";
 import { makeStyles } from "@material-ui/core/styles";
@@ -41,8 +40,12 @@ const useStyles = makeStyles((theme) => {
 const DynamicTable = (props) => {
 	const classes = useStyles();
 
-	const handleDelete = (id) => {
-		props.onDelete(id);
+	const handleDelete = (data) => {
+		if (data.returnQuantity) {
+			delete data.returnQuantity;
+		}
+
+		props.onDelete(data.code);
 	};
 
 	const tableHeader = (
@@ -82,7 +85,7 @@ const DynamicTable = (props) => {
 									<IconButton
 										className={classes.danger}
 										size="small"
-										onClick={() => handleDelete(row.code)}
+										onClick={() => handleDelete(row)}
 									>
 										<RemoveCircleIcon />
 									</IconButton>
@@ -94,12 +97,25 @@ const DynamicTable = (props) => {
 									<DynamicTableTextField
 										type="number"
 										reference={row.code}
-										value={row.quantity}
-										originalValue={row.orderQuantity}
+										value={row.orderQuantity}
+										originalValue={row.quantity}
 										fieldErrors={props.fieldErrors}
 										onNumberChange={props.onNumberChange}
 										required
-										edit={!!props.edit}
+									/>
+								);
+							}
+							//Allow input for return quantity
+							else if (header.id === "returnQuantity") {
+								value = (
+									<DynamicTableTextField
+										type="number"
+										reference={row.code}
+										value={row.returnQuantity}
+										originalValue={row.quantity}
+										fieldErrors={props.fieldErrors}
+										onNumberChange={props.onNumberChange}
+										required
 									/>
 								);
 							}
@@ -127,36 +143,39 @@ const DynamicTable = (props) => {
 		</TableBody>
 	);
 
-	const tableFooter = (
-		<TableFooter>
-			<TableRow>
-				<TableCell
-					colSpan={props.headers.length - 2}
-					style={{
-						textAlign: "right",
-					}}
-				>
-					<Typography
-						style={{ fontWeight: "bold", color: "black" }}
-						gutterBottom
-					>
-						TOTAL AMOUNT :
-					</Typography>
-				</TableCell>
-				<TableCell colSpan={1}>
-					<Typography
+	let tableFooter;
+	if (props.total != undefined) {
+		tableFooter = (
+			<TableFooter>
+				<TableRow>
+					<TableCell
+						colSpan={props.headers.length - 2}
 						style={{
 							textAlign: "right",
-							color: "black",
-							fontWeight: "bold",
 						}}
 					>
-						{props.total}
-					</Typography>
-				</TableCell>
-			</TableRow>
-		</TableFooter>
-	);
+						<Typography
+							style={{ fontWeight: "bold", color: "black" }}
+							gutterBottom
+						>
+							TOTAL AMOUNT :
+						</Typography>
+					</TableCell>
+					<TableCell colSpan={1}>
+						<Typography
+							style={{
+								textAlign: "right",
+								color: "black",
+								fontWeight: "bold",
+							}}
+						>
+							{props.total}
+						</Typography>
+					</TableCell>
+				</TableRow>
+			</TableFooter>
+		);
+	}
 
 	return (
 		<Paper className={classes.root}>

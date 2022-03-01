@@ -21,6 +21,22 @@ const ViewCustomerInfo = (props) => {
 
 	return (
 		<Grid className={classes.root} container>
+			<Grid item className={classes.grid} xs={12}>
+				<TextField
+					value={props.data.customerNo}
+					size="small"
+					className={classes.textField}
+					id="customer-number"
+					label="Customer Number"
+					variant="outlined"
+					InputProps={{
+						readOnly: true,
+					}}
+					InputLabelProps={{
+						shrink: true,
+					}}
+				/>
+			</Grid>
 			<Grid item className={classes.grid} xs={5}>
 				<TextField
 					value={props.data.firstName}

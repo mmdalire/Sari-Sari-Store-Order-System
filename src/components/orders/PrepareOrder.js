@@ -14,7 +14,7 @@ const tableHeaders = [
 
 const fieldErrors = {
 	required: "Quantity is required!",
-	notBeZero: "Quantoty must be greater than 0",
+	notBeZero: "Quantity must be greater than 0",
 	greaterThanValue: "Quantity exceeds than the stock quantity",
 };
 
@@ -27,7 +27,6 @@ const PrepareOrder = (props) => {
 			total={props.total}
 			onNumberChange={props.onQuantityChange}
 			onDelete={props.onDelete}
-			edit={!!props.edit}
 		/>
 	);
 };

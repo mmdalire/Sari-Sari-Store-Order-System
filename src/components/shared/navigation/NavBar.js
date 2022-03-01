@@ -29,7 +29,7 @@ const NavBar = () => {
 	const classes = useStyles();
 
 	return (
-		<AppBar className={classes.appbar} elevation>
+		<AppBar className={classes.appbar} elevation={2}>
 			<ToolBar>
 				<Typography className={classes.title}>
 					Inventory System

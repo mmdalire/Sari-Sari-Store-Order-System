@@ -80,6 +80,12 @@ const ListingTable = (props) => {
 		return credit;
 	};
 
+	const prt = (prtNo) => {
+		return prtNo.map((prt) => {
+			return <Chip label={prt} style={{ marginBottom: 10 }} />;
+		});
+	};
+
 	const handlePageChange = (e) => {
 		setPage(parseInt(e.target.value));
 		props.onHandlePage(page);
@@ -185,6 +191,10 @@ const ListingTable = (props) => {
 								value = row.price * row.quantity;
 							} else if (header.id === "credit") {
 								value = creditStatus(row.credit);
+							}
+							//This column is for the PRTs existed related in a product (in VIEWING orders)
+							else if (header.id === "relatedPrtNo") {
+								value = prt(row.prtNo);
 							} else {
 								value = row[header.id];
 							}

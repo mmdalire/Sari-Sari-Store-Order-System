@@ -63,8 +63,19 @@ const DUMMY_DATA = {
 	],
 	credit: 0,
 	status: "SUBMIT",
+	remarks: "Some remarks",
 	createdDate: "2022-02-18T15:49:04.781Z",
 };
+
+const DUMMY_RETURNS = [
+	{
+		_id: "CAN-CTU",
+		name: "CENTURY TUNA",
+		quantity: 9,
+		price: 60,
+		prtNo: ["PRTNO202202-0001", "PRTNO202202-0002"],
+	},
+];
 
 const tableHeaders = [
 	{ id: "code", label: "Product Code", minWidth: 150 },
@@ -72,6 +83,14 @@ const tableHeaders = [
 	{ id: "price", label: "Price", align: "right" },
 	{ id: "quantity", label: "Order Quantity", align: "right" },
 	{ id: "subtotal", label: "Subtotal", align: "right" },
+];
+
+const tableHeadersReturn = [
+	{ id: "_id", label: "Product Code", minWidth: 150 },
+	{ id: "name", label: "Brand Name", minWidth: 100 },
+	{ id: "price", label: "Price", align: "right" },
+	{ id: "quantity", label: "Return Quantity", align: "right" },
+	{ id: "relatedPrtNo", label: "PRTs" },
 ];
 
 const ViewOrder = () => {
@@ -233,9 +252,42 @@ const ViewOrder = () => {
 								readOnly
 							/>
 						</Grid>
+						<Grid item className={classes.grid} xs={12}>
+							<TextField
+								value={DUMMY_DATA.remarks}
+								size="small"
+								className={classes.textField}
+								id="remarks"
+								label="Remarks"
+								variant="outlined"
+								readOnly
+							/>
+						</Grid>
 					</Grid>
 				</CardContent>
 			</Card>
+			{DUMMY_RETURNS && DUMMY_RETURNS.length > 0 && (
+				<Card variant="outlined" className={classes.card}>
+					<CardHeader
+						className={classes.cardHeader}
+						title={
+							<Typography variant="h6" color="primary">
+								Product returns
+							</Typography>
+						}
+					/>
+					<CardContent className={classes.cardContent}>
+						<Grid container>
+							<Grid item className={classes.grid} xs={12}>
+								<ListingTable
+									headers={tableHeadersReturn}
+									data={DUMMY_RETURNS}
+								/>
+							</Grid>
+						</Grid>
+					</CardContent>
+				</Card>
+			)}
 		</div>
 	);
 };
