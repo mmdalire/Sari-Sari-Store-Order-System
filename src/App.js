@@ -33,6 +33,7 @@ const App = () => {
 			<Router>
 				<MainNavigation>
 					<Routes>
+						<Route path="/" element={<Dashboard />} exact />
 						<Route
 							path="/dashboard"
 							element={<Dashboard />}
