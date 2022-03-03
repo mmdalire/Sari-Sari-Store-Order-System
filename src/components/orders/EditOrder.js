@@ -19,7 +19,6 @@ import ModalTemplate from "../shared/UI/ModalTemplate";
 import PrepareOrder from "./PrepareOrder";
 import SnackbarTemplate from "../shared/UI/SnackbarTemplate";
 import SelectProduct from "./SelectProduct";
-import { formValid } from "../../utils/utilities";
 
 const DUMMY_DATA = {
 	_id: "620fbff03f030d924d878abc",
