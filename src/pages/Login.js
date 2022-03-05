@@ -14,9 +14,13 @@ import VpnKeyIcon from "@material-ui/icons/VpnKey";
 import { makeStyles } from "@material-ui/styles";
 import { blue } from "@material-ui/core/colors";
 
+import ErrorDialog from "../components/shared/UI/ErrorDialog";
+import LoadingDialog from "../components/shared/UI/LoadingDialog";
 import ModalTemplate from "../components/shared/UI/ModalTemplate";
 import Register from "../components/login/Register";
 import SnackbarTemplate from "../components/shared/UI/SnackbarTemplate";
+
+import { useHttpClient } from "../hooks/http-hook";
 
 const useStyles = makeStyles((theme) => {
 	return {
@@ -66,6 +70,7 @@ const registerModal = {
 const Login = (props) => {
 	const classes = useStyles();
 
+	const { isLoading, httpErrors, sendRequest, clearError } = useHttpClient();
 	const [warnings, setWarnings] = useState(null);
 	const [openModal, setOpenModal] = useState(false);
 	const [modalConfig, setModalConfig] = useState(registerModal);
@@ -109,22 +114,40 @@ const Login = (props) => {
 		setLoginCredentials(newCredentials);
 	};
 
-	const handleLoginSubmit = (e) => {
+	const handleLoginSubmit = async (e) => {
 		e.preventDefault();
 
-		console.log({
-			email: loginCredentials.email.value,
-			password: loginCredentials.password.value,
-		});
+		try {
+			const { userId, token, firstName, lastName } = await sendRequest(
+				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/users/login`,
+				"POST",
+				JSON.stringify({
+					email: loginCredentials.email.value,
+					password: loginCredentials.password.value,
+				}),
+				{
+					"Content-Type": "application/json",
+				}
+			);
 
-		const token = Math.random() * 1000;
-		const userId = "Some user ID";
-
-		props.onLogin(token, userId);
+			props.onLogin(token, userId, firstName, lastName);
+		} catch (err) {}
 	};
 
 	return (
 		<>
+			{/* Loading */}
+			{isLoading && <LoadingDialog />}
+
+			{/* Dialogs */}
+			{httpErrors && (
+				<ErrorDialog
+					open={!!httpErrors}
+					message={httpErrors}
+					onHandleClose={clearError}
+				/>
+			)}
+
 			{/* Snackbars */}
 			{warnings && (
 				<SnackbarTemplate

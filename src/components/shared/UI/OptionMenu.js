@@ -1,11 +1,15 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 
 import IconButton from "@material-ui/core/IconButton";
 import Menu from "@material-ui/core/Menu";
 import MenuItem from "@material-ui/core/MenuItem";
 import MoreVertIcon from "@material-ui/icons/MoreVert";
 
+import { AuthContext } from "../../../context/auth-context";
+
 const OptionMenu = (props) => {
+	const auth = useContext(AuthContext);
+
 	const [anchorEl, setAnchorEl] = useState(null);
 	const open = Boolean(anchorEl);
 
@@ -25,6 +29,9 @@ const OptionMenu = (props) => {
 				...modalConfig,
 				operation: e.currentTarget.dataset.option,
 			});
+
+			//Get the current ID of the data to be accessed
+			auth.currentId = props.referenceId;
 		} else {
 			props.onHandleModalConfig({});
 		}

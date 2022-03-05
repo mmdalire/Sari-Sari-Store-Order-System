@@ -2,7 +2,6 @@ import React, { useState, useContext } from "react";
 
 import AppBar from "@material-ui/core/AppBar";
 import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
-import Avatar from "@material-ui/core/Avatar";
 import IconButton from "@material-ui/core/IconButton";
 import Menu from "@material-ui/core/Menu";
 import MenuItem from "@material-ui/core/MenuItem";
@@ -12,6 +11,8 @@ import { makeStyles } from "@material-ui/styles";
 import { blue } from "@material-ui/core/colors";
 
 import { AuthContext } from "../../../context/auth-context";
+
+import AvatarTemplate from "../UI/AvatarTemplate";
 
 const drawerWidth = 240;
 
@@ -54,11 +55,21 @@ const NavBar = () => {
 	return (
 		<AppBar className={classes.appbar} elevation={2}>
 			<ToolBar>
-				<Typography className={classes.title}>
-					Inventory System
+				<Typography
+					style={{
+						width: "100%",
+						textAlign: "right",
+						marginRight: 10,
+					}}
+				>
+					{auth.userFirstName} {auth.userLastName}
 				</Typography>
-				<Typography>Test</Typography>
-				<Avatar className={classes.avatar}>M</Avatar>
+				<AvatarTemplate
+					data={{
+						firstName: auth.userFirstName,
+						lastName: auth.userLastName,
+					}}
+				/>
 
 				<IconButton
 					style={{ color: "white" }}

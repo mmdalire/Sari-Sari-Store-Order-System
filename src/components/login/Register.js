@@ -14,6 +14,8 @@ import { makeStyles } from "@material-ui/styles";
 import { green } from "@material-ui/core/colors";
 
 import ErrorDialog from "../shared/UI/ErrorDialog";
+import LoadingDialog from "../shared/UI/LoadingDialog";
+import { useHttpClient } from "../../hooks/http-hook";
 
 import { formValid } from "../../utils/utilities";
 
@@ -77,6 +79,7 @@ const birthOptions = {
 const Register = (props) => {
 	const classes = useStyles();
 
+	const { isLoading, httpErrors, sendRequest, clearError } = useHttpClient();
 	const [errors, setErrors] = useState(null);
 	const [fieldData, setFieldData] = useState({
 		firstName: { value: "", hasError: false, hasTouched: false, error: "" },
@@ -120,6 +123,7 @@ const Register = (props) => {
 
 	const handleClearErrors = () => {
 		setErrors(null);
+		clearError();
 	};
 
 	const handleFirstName = (e) => {
@@ -320,7 +324,7 @@ const Register = (props) => {
 		setFieldData(newFieldData);
 	};
 
-	const handleSubmitRegister = (e) => {
+	const handleSubmitRegister = async (e) => {
 		e.preventDefault();
 
 		//If the password is NOT the same as the confirm password
@@ -331,32 +335,41 @@ const Register = (props) => {
 			return;
 		}
 
-		if (isFormValid) {
-			const userData = {
-				firstName: fieldData.firstName.value,
-				lastName: fieldData.lastName.value,
-				middleInitial: fieldData.middleInitial.value,
-				email: fieldData.email.value,
-				phoneNumber: fieldData.phoneNumber.value,
-				gender: fieldData.gender.value,
-				birthdate: `${fieldData.birthYear.value}-${fieldData.birthMonth.value}-${fieldData.birthDay.value}`,
-				password: fieldData.password.value,
-			};
+		try {
+			await sendRequest(
+				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/users/signup`,
+				"POST",
+				JSON.stringify({
+					firstName: fieldData.firstName.value,
+					lastName: fieldData.lastName.value,
+					middleInitial: fieldData.middleInitial.value,
+					email: fieldData.email.value,
+					phoneNumber: fieldData.phoneNumber.value,
+					gender: fieldData.gender.value,
+					birthdate: `${fieldData.birthYear.value}-${fieldData.birthMonth.value}-${fieldData.birthDay.value}`,
+					password: fieldData.password.value,
+				}),
+				{
+					"Content-Type": "application/json",
+				}
+			);
 
-			console.log(userData);
 			props.onClose(
 				"Successfully registered your account! Please login to access your account!"
 			);
-		}
+		} catch (err) {}
 	};
 
 	return (
 		<>
+			{/* Loading */}
+			{isLoading && <LoadingDialog />}
+
 			{/* Dialogs */}
-			{errors && (
+			{(errors || httpErrors) && (
 				<ErrorDialog
-					open={!!errors}
-					message={errors}
+					open={!!(errors || httpErrors)}
+					message={errors || httpErrors}
 					onHandleClose={handleClearErrors}
 				/>
 			)}

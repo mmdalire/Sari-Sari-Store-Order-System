@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 
 import Button from "@material-ui/core/Button";
 import Grid from "@material-ui/core/Grid";
@@ -6,6 +6,15 @@ import MenuItem from "@material-ui/core/MenuItem";
 import SaveIcon from "@material-ui/icons/Save";
 import TextField from "@material-ui/core/TextField";
 import { makeStyles } from "@material-ui/styles";
+
+import EmptyContainer from "../shared/UI/EmptyContainer";
+import ErrorDialog from "../shared/UI/ErrorDialog";
+import Loading from "../shared/UI/Loading";
+import LoadingDialog from "../shared/UI/LoadingDialog";
+
+import { AuthContext } from "../../context/auth-context";
+
+import { useHttpClient } from "../../hooks/http-hook";
 
 import { formValid } from "../../utils/utilities";
 
@@ -75,55 +84,83 @@ const birthOptions = {
 const EditCustomer = (props) => {
 	const classes = useStyles();
 
-	const [fieldData, setFieldData] = useState({
-		firstName: {
-			value: DUMMY_DATA.firstName,
-			hasError: false,
-			error: "",
-		},
-		lastName: {
-			value: DUMMY_DATA.lastName,
-			hasError: false,
-			error: "",
-		},
-		middleInitial: {
-			value: DUMMY_DATA.middleInitial,
-			hasError: false,
-			hasTouched: true,
-			error: "",
-		},
-		email: {
-			value: DUMMY_DATA.email,
-			hasError: false,
-			error: "",
-		},
-		phoneNumber: {
-			value: "",
-			hasError: false,
-			error: "",
-		},
-		birthYear: {
-			value: DUMMY_DATA.birthDate.split("-")[0],
-			hasError: false,
-			error: "",
-		},
-		birthMonth: {
-			value: DUMMY_DATA.birthDate.split("-")[1],
-			hasError: false,
-			error: "",
-		},
-		birthDay: {
-			value: DUMMY_DATA.birthDate.split("-")[2],
-			hasError: false,
-			error: "",
-		},
-		address: {
-			value: DUMMY_DATA.address,
-			hasError: false,
-			error: "",
-		},
-	});
+	const auth = useContext(AuthContext);
+
+	const { isLoading, httpErrors, sendRequest, clearError } = useHttpClient();
+
+	const [fieldData, setFieldData] = useState(null);
 	const [isFormValid, setIsFormValid] = useState(true);
+	const [readingIsLoading, setReadingIsLoading] = useState(null);
+
+	useEffect(() => {
+		const loadCustomer = async () => {
+			setReadingIsLoading(true); //Activate loading spinner on the card ITSELF
+			try {
+				const data = await sendRequest(
+					`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/customers/${auth.currentId}`,
+					"GET",
+					null,
+					{
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${auth.token}`,
+					}
+				);
+
+				setFieldData({
+					firstName: {
+						value: data.firstName,
+						hasError: false,
+						error: "",
+					},
+					lastName: {
+						value: data.lastName,
+						hasError: false,
+						error: "",
+					},
+					middleInitial: {
+						value: data.middleInitial,
+						hasError: false,
+						hasTouched: true,
+						error: "",
+					},
+					email: {
+						value: data.email,
+						hasError: false,
+						error: "",
+					},
+					phoneNumber: {
+						value: data.phoneNumber,
+						hasError: false,
+						error: "",
+					},
+					birthYear: {
+						value: data.birthdate.split("-")[0],
+						hasError: false,
+						error: "",
+					},
+					birthMonth: {
+						value: data.birthdate.split("-")[1],
+						hasError: false,
+						error: "",
+					},
+					birthDay: {
+						value: data.birthdate.split("-")[2].substring(0, 2),
+						hasError: false,
+						error: "",
+					},
+					address: {
+						value: data.address,
+						hasError: false,
+						error: "",
+					},
+				});
+			} catch (err) {}
+
+			setReadingIsLoading(false); //Deactivate loading spinner on the card ITSELF
+		};
+
+		loadCustomer();
+	}, []);
 
 	const handleFirstName = (e) => {
 		const newFieldData = { ...fieldData };
@@ -281,213 +318,250 @@ const EditCustomer = (props) => {
 		setFieldData(newFieldData);
 	};
 
-	const handleSubmitCustomer = (e) => {
+	const handleSubmitCustomer = async (e) => {
 		e.preventDefault();
 
-		if (isFormValid) {
-			const customerData = {
-				firstName: fieldData.firstName.value,
-				lastName: fieldData.lastName.value,
-				middleInitial: fieldData.middleInitial.value,
-				email: fieldData.email.value,
-				phoneNumber: fieldData.phoneNumber.value,
-				birthDate: `${fieldData.birthYear.value}-${fieldData.birthMonth.value}-${fieldData.birthDay.value}`,
-				address: fieldData.address.value,
-				status: "ACTIVE",
-				customerNo: Math.ceil(Math.random() * 10000),
-			};
+		const customerData = {
+			firstName: fieldData.firstName.value,
+			lastName: fieldData.lastName.value,
+			middleInitial: fieldData.middleInitial.value,
+			email: fieldData.email.value,
+			phoneNumber: fieldData.phoneNumber.value,
+			birthdate: `${fieldData.birthYear.value}-${fieldData.birthMonth.value}-${fieldData.birthDay.value}`,
+			address: fieldData.address.value,
+			userId: auth.userId,
+		};
 
-			props.onSave(customerData);
-		}
+		setReadingIsLoading(null); //To avoid displaying the error message in the form itself (editing errors must be in dialog)
+		try {
+			await sendRequest(
+				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/customers/${auth.currentId}`,
+				"PATCH",
+				JSON.stringify(customerData),
+				{
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${auth.token}`,
+				}
+			);
+
+			props.onClose("Successfully edited customer!");
+		} catch (err) {}
 	};
 
 	return (
-		<form
-			className={classes.root}
-			onSubmit={handleSubmitCustomer}
-			noValidate
-			autoComplete="off"
-		>
-			<Grid container>
-				<Grid item className={classes.grid} xs={5}>
-					<TextField
-						value={fieldData.firstName.value}
-						onChange={handleFirstName}
-						size="small"
-						className={classes.textField}
-						id="first-name"
-						label="First Name"
-						variant="outlined"
-						required
-						error={fieldData.firstName.hasError}
-						helperText={fieldData.firstName.error}
-					/>
-				</Grid>
-				<Grid item className={classes.grid} xs={5}>
-					<TextField
-						value={fieldData.lastName.value}
-						onChange={handleLastName}
-						size="small"
-						className={classes.textField}
-						id="last-name"
-						label="Last Name"
-						variant="outlined"
-						required
-						error={fieldData.lastName.hasError}
-						helperText={fieldData.lastName.error}
-					/>
-				</Grid>
-				<Grid item className={classes.grid} xs={2}>
-					<TextField
-						value={fieldData.middleInitial.value}
-						onChange={handleMiddleInitial}
-						size="small"
-						className={classes.textField}
-						id="middle-initial"
-						label="M.I."
-						variant="outlined"
-					/>
-				</Grid>
-				<Grid item className={classes.grid} xs={6}>
-					<TextField
-						value={fieldData.email.value}
-						onChange={handleEmail}
-						size="small"
-						className={classes.textField}
-						id="email"
-						label="Email"
-						variant="outlined"
-						type="email"
-						required
-						error={fieldData.email.hasError}
-						helperText={fieldData.email.error}
-					/>
-				</Grid>
-				<Grid item className={classes.grid} xs={6}>
-					<TextField
-						value={fieldData.phoneNumber.value}
-						onChange={handlePhoneNumber}
-						size="small"
-						className={classes.textField}
-						id="phone-number"
-						label="Phone number"
-						variant="outlined"
-						required
-						error={fieldData.phoneNumber.hasError}
-						helperText={fieldData.phoneNumber.error}
-					/>
-				</Grid>
-				<Grid item className={classes.grid} xs={4}>
-					<TextField
-						value={fieldData.birthMonth.value}
-						onChange={handleBirthMonth}
-						size="small"
-						className={classes.textField}
-						select
-						label="Birth month"
-						variant="outlined"
-						required
-						error={fieldData.birthMonth.hasError}
-						helperText={fieldData.birthMonth.error}
-					>
-						{birthOptions.month.map((option) => {
-							return (
-								<MenuItem
-									key={option.value}
-									value={option.value}
-								>
-									{option.label}
-								</MenuItem>
-							);
-						})}
-					</TextField>
-				</Grid>
-				<Grid item className={classes.grid} xs={4}>
-					<TextField
-						value={fieldData.birthDay.value}
-						onChange={handleBirthDay}
-						size="small"
-						className={classes.textField}
-						select
-						label="Birth day"
-						variant="outlined"
-						required
-						error={fieldData.birthDay.hasError}
-						helperText={fieldData.birthDay.error}
-					>
-						{birthOptions.day().map((option) => {
-							return (
-								<MenuItem
-									key={option.value}
-									value={option.value}
-								>
-									{option.label}
-								</MenuItem>
-							);
-						})}
-					</TextField>
-				</Grid>
-				<Grid item className={classes.grid} xs={4}>
-					<TextField
-						value={fieldData.birthYear.value}
-						onChange={handleBirthYear}
-						size="small"
-						className={classes.textField}
-						select
-						label="Birth year"
-						variant="outlined"
-						required
-						error={fieldData.birthYear.hasError}
-						helperText={fieldData.birthYear.error}
-					>
-						{birthOptions.year().map((option) => {
-							return (
-								<MenuItem
-									key={option.value}
-									value={option.value}
-								>
-									{option.label}
-								</MenuItem>
-							);
-						})}
-					</TextField>
-				</Grid>
-				<Grid item className={classes.grid} xs={12}>
-					<TextField
-						value={fieldData.address.value}
-						onChange={handleAddress}
-						size="small"
-						multiline
-						rows={2}
-						className={classes.textField}
-						id="address"
-						label="Address"
-						variant="outlined"
-						required
-						error={fieldData.address.hasError}
-						helperText={fieldData.address.error}
-					/>
-				</Grid>
+		<>
+			{/* Loading in updating */}
+			{
+				isLoading && !readingIsLoading && (
+					<LoadingDialog />
+				) /*Loading dialog appears only when updating the customer*/
+			}
+			{!isLoading && readingIsLoading == null && httpErrors && (
+				<ErrorDialog
+					open={!!httpErrors}
+					message={httpErrors}
+					onHandleClose={clearError}
+				/>
+			)}
 
-				<Grid
-					item
-					className={classes.grid}
-					style={{ textAlign: "right" }}
-					xs={12}
+			{readingIsLoading && <Loading />}
+			{readingIsLoading === false && httpErrors && (
+				<EmptyContainer
+					message={
+						httpErrors ||
+						"Something went wrong. Please try again later."
+					}
+				/>
+			)}
+			{!readingIsLoading && !httpErrors && fieldData && (
+				<form
+					className={classes.root}
+					onSubmit={handleSubmitCustomer}
+					noValidate
+					autoComplete="off"
 				>
-					<Button
-						variant="contained"
-						type="submit"
-						disabled={!isFormValid}
-						color="secondary"
-						startIcon={<SaveIcon />}
-					>
-						{" "}
-						Save changes{" "}
-					</Button>
-				</Grid>
-			</Grid>
-		</form>
+					<Grid container>
+						<Grid item className={classes.grid} xs={5}>
+							<TextField
+								value={fieldData.firstName.value}
+								onChange={handleFirstName}
+								size="small"
+								className={classes.textField}
+								id="first-name"
+								label="First Name"
+								variant="outlined"
+								required
+								error={fieldData.firstName.hasError}
+								helperText={fieldData.firstName.error}
+							/>
+						</Grid>
+						<Grid item className={classes.grid} xs={5}>
+							<TextField
+								value={fieldData.lastName.value}
+								onChange={handleLastName}
+								size="small"
+								className={classes.textField}
+								id="last-name"
+								label="Last Name"
+								variant="outlined"
+								required
+								error={fieldData.lastName.hasError}
+								helperText={fieldData.lastName.error}
+							/>
+						</Grid>
+						<Grid item className={classes.grid} xs={2}>
+							<TextField
+								value={fieldData.middleInitial.value}
+								onChange={handleMiddleInitial}
+								size="small"
+								className={classes.textField}
+								id="middle-initial"
+								label="M.I."
+								variant="outlined"
+							/>
+						</Grid>
+						<Grid item className={classes.grid} xs={6}>
+							<TextField
+								value={fieldData.email.value}
+								onChange={handleEmail}
+								size="small"
+								className={classes.textField}
+								id="email"
+								label="Email"
+								variant="outlined"
+								type="email"
+								required
+								error={fieldData.email.hasError}
+								helperText={fieldData.email.error}
+							/>
+						</Grid>
+						<Grid item className={classes.grid} xs={6}>
+							<TextField
+								value={fieldData.phoneNumber.value}
+								onChange={handlePhoneNumber}
+								size="small"
+								className={classes.textField}
+								id="phone-number"
+								label="Phone number"
+								variant="outlined"
+								required
+								error={fieldData.phoneNumber.hasError}
+								helperText={fieldData.phoneNumber.error}
+							/>
+						</Grid>
+						<Grid item className={classes.grid} xs={4}>
+							<TextField
+								value={fieldData.birthMonth.value}
+								onChange={handleBirthMonth}
+								size="small"
+								className={classes.textField}
+								select
+								label="Birth month"
+								variant="outlined"
+								required
+								error={fieldData.birthMonth.hasError}
+								helperText={fieldData.birthMonth.error}
+							>
+								{birthOptions.month.map((option) => {
+									return (
+										<MenuItem
+											key={option.value}
+											value={option.value}
+										>
+											{option.label}
+										</MenuItem>
+									);
+								})}
+							</TextField>
+						</Grid>
+						<Grid item className={classes.grid} xs={4}>
+							<TextField
+								value={fieldData.birthDay.value}
+								onChange={handleBirthDay}
+								size="small"
+								className={classes.textField}
+								select
+								label="Birth day"
+								variant="outlined"
+								required
+								error={fieldData.birthDay.hasError}
+								helperText={fieldData.birthDay.error}
+							>
+								{birthOptions.day().map((option) => {
+									return (
+										<MenuItem
+											key={option.value}
+											value={option.value}
+										>
+											{option.label}
+										</MenuItem>
+									);
+								})}
+							</TextField>
+						</Grid>
+						<Grid item className={classes.grid} xs={4}>
+							<TextField
+								value={fieldData.birthYear.value}
+								onChange={handleBirthYear}
+								size="small"
+								className={classes.textField}
+								select
+								label="Birth year"
+								variant="outlined"
+								required
+								error={fieldData.birthYear.hasError}
+								helperText={fieldData.birthYear.error}
+							>
+								{birthOptions.year().map((option) => {
+									return (
+										<MenuItem
+											key={option.value}
+											value={option.value}
+										>
+											{option.label}
+										</MenuItem>
+									);
+								})}
+							</TextField>
+						</Grid>
+						<Grid item className={classes.grid} xs={12}>
+							<TextField
+								value={fieldData.address.value}
+								onChange={handleAddress}
+								size="small"
+								multiline
+								rows={2}
+								className={classes.textField}
+								id="address"
+								label="Address"
+								variant="outlined"
+								required
+								error={fieldData.address.hasError}
+								helperText={fieldData.address.error}
+							/>
+						</Grid>
+
+						<Grid
+							item
+							className={classes.grid}
+							style={{ textAlign: "right" }}
+							xs={12}
+						>
+							<Button
+								variant="contained"
+								type="submit"
+								disabled={!isFormValid}
+								color="secondary"
+								startIcon={<SaveIcon />}
+							>
+								{" "}
+								Save changes{" "}
+							</Button>
+						</Grid>
+					</Grid>
+				</form>
+			)}
+		</>
 	);
 };
 

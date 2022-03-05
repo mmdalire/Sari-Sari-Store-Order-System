@@ -9,41 +9,6 @@ import { makeStyles } from "@material-ui/styles";
 import ViewCustomerInfo from "./ViewCustomerInfo";
 import ViewCustomerCredit from "./ViewCustomerCredit";
 
-const DUMMY_DATA = {
-	customerNo: "CRM202202-0001",
-	lastName: "TEST1",
-	firstName: "TEST1L",
-	middleInitial: "A",
-	phoneNumber: "11112223333",
-	email: "email@email.com",
-	address: "Some address at this address",
-	birthDate: "2021-12-12",
-	status: "ACTIVE",
-};
-
-const DUMMY_ORDER_DATA = [
-	{
-		poNo: "PONO202202-0001",
-		credit: 100,
-		createdDate: "2022-02-18T15:49:04.781Z",
-	},
-	{
-		poNo: "PONO202202-0002",
-		credit: 120,
-		createdDate: "2022-02-18T15:49:04.781Z",
-	},
-	{
-		poNo: "PONO202202-0003",
-		credit: 130,
-		createdDate: "2022-02-18T15:49:04.781Z",
-	},
-	{
-		poNo: "PONO202202-0004",
-		credit: 50,
-		createdDate: "2022-02-18T15:49:04.781Z",
-	},
-];
-
 const useStyles = makeStyles((theme) => {
 	return {
 		root: {
@@ -64,7 +29,7 @@ const useStyles = makeStyles((theme) => {
 	};
 });
 
-const ViewCustomer = (props) => {
+const ViewCustomer = () => {
 	const classes = useStyles();
 
 	return (
@@ -79,7 +44,7 @@ const ViewCustomer = (props) => {
 					}
 				/>
 				<CardContent className={classes.cardContent}>
-					<ViewCustomerInfo data={DUMMY_DATA} />
+					<ViewCustomerInfo />
 				</CardContent>
 			</Card>
 			<Card variant="outlined" className={classes.card}>
@@ -92,7 +57,7 @@ const ViewCustomer = (props) => {
 					}
 				/>
 				<CardContent className={classes.cardContent}>
-					<ViewCustomerCredit data={DUMMY_ORDER_DATA} />
+					<ViewCustomerCredit />
 				</CardContent>
 			</Card>
 		</div>

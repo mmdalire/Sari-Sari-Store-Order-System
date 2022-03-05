@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 
 import { makeStyles } from "@material-ui/core/styles";
 import AddIcon from "@material-ui/icons/Add";
@@ -11,7 +11,6 @@ import TableCell from "@material-ui/core/TableCell";
 import TableContainer from "@material-ui/core/TableContainer";
 import TableFooter from "@material-ui/core/TableFooter";
 import TableHead from "@material-ui/core/TableHead";
-import TablePagination from "@material-ui/core/TablePagination";
 import TableRow from "@material-ui/core/TableRow";
 import Typography from "@material-ui/core/Typography";
 import { blue, green, red } from "@material-ui/core/colors";
@@ -49,9 +48,6 @@ const useStyles = makeStyles((theme) => {
 const ListingTable = (props) => {
 	const classes = useStyles();
 
-	const [limit, setLimit] = useState(props.limit);
-	const [page, setPage] = useState(props.page);
-
 	const chipStatus = (status) => {
 		switch (status) {
 			case "ACTIVE":
@@ -84,16 +80,6 @@ const ListingTable = (props) => {
 		return prtNo.map((prt) => {
 			return <Chip label={prt} style={{ marginBottom: 10 }} />;
 		});
-	};
-
-	const handlePageChange = (e) => {
-		setPage(parseInt(e.target.value));
-		props.onHandlePage(page);
-	};
-
-	const handleLimitChange = (e) => {
-		setLimit(parseInt(e.target.value));
-		props.onHandleLimit(limit);
 	};
 
 	const handleSelectCustomer = (data) => {
@@ -157,6 +143,7 @@ const ListingTable = (props) => {
 										}
 										availableMenu={props.availableMenu}
 										status={row.status}
+										referenceId={row._id}
 									/>
 								);
 							}
@@ -248,23 +235,6 @@ const ListingTable = (props) => {
 		);
 	}
 
-	let tablePagination;
-
-	if (props.limit && props.page) {
-		tablePagination = (
-			<TablePagination
-				className={classes.tableHeaderFooter}
-				rowsPerPageOptions={[10, 25, 50, 75, 100]}
-				component="div"
-				count={100}
-				rowsPerPage={limit}
-				page={page}
-				onPageChange={handlePageChange}
-				onRowsPerPageChange={handleLimitChange}
-			/>
-		);
-	}
-
 	return (
 		<Paper className={classes.root}>
 			<TableContainer>
@@ -274,7 +244,6 @@ const ListingTable = (props) => {
 					{tableFooter}
 				</Table>
 			</TableContainer>
-			{tablePagination}
 		</Paper>
 	);
 };

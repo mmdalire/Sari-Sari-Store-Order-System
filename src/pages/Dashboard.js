@@ -8,13 +8,7 @@ import PageTitle from "../components/shared/UI/PageTitle";
 import TopCustomers from "../components/dashboard/TopCustomers";
 import TopProducts from "../components/dashboard/TopProducts";
 
-import { AuthContext } from "../context/auth-context";
-
 const Dashboard = () => {
-	const auth = useContext(AuthContext);
-
-	console.log(auth.userId);
-
 	return (
 		<Container>
 			<PageTitle title="Dashboard" />

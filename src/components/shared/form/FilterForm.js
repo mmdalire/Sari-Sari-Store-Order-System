@@ -17,7 +17,11 @@ const useStyles = makeStyles((theme) => {
 		},
 		filter: {
 			marginRight: theme.spacing(4),
-			width: "200px",
+			width: "150px",
+		},
+		limit: {
+			marginRight: "30px",
+			width: "10%",
 		},
 		search: {
 			marginRight: "20px",
@@ -37,8 +41,9 @@ const FilterForm = (props) => {
 		search: "",
 		sort: "createddate",
 		order: "desc",
+		limit: 10,
 		additional: {
-			isBlackListed: false,
+			isBlacklisted: false,
 		},
 	});
 
@@ -46,7 +51,7 @@ const FilterForm = (props) => {
 		const newState = {
 			...filterParams,
 		};
-		newState.additional.isBlackListed = e.target.checked;
+		newState.additional.isBlacklisted = e.target.checked;
 
 		setFilterParams(newState);
 	};
@@ -57,6 +62,10 @@ const FilterForm = (props) => {
 
 	const handleOrderChange = (e) => {
 		setFilterParams({ ...filterParams, order: e.target.value });
+	};
+
+	const handleLimitChange = (e) => {
+		setFilterParams({ ...filterParams, limit: parseInt(e.target.value) });
 	};
 
 	const handleSearchChange = (e) => {
@@ -106,6 +115,18 @@ const FilterForm = (props) => {
 		</TextField>
 	);
 
+	const limitFilter = (
+		<TextField
+			className={classes.limit}
+			onChange={handleLimitChange}
+			value={filterParams.limit}
+			inputProps={{ min: 1 }}
+			id="limit"
+			label="Limit"
+			type="number"
+		/>
+	);
+
 	let additionalCustomerFilter;
 	//Set the appropriate filter options per entity
 	if (props.isBlacklisted) {
@@ -151,6 +172,7 @@ const FilterForm = (props) => {
 		>
 			{sortFilter}
 			{orderFilter}
+			{limitFilter}
 			{additionalCustomerFilter}
 			{searchFilter}
 			<Button

@@ -38,10 +38,19 @@ const theme = createTheme({
 const App = () => {
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
 	const [userId, setUserId] = useState(null);
+	const [token, setToken] = useState(null);
+	const [userFirstName, setUserFirstName] = useState(null);
+	const [userLastName, setUserLastName] = useState(null);
 
-	const login = useCallback((token, userId) => {
+	const login = useCallback((token, userId, userFirstName, userLastName) => {
 		setUserId(userId);
-		localStorage.setItem("userData", JSON.stringify({ userId, token }));
+		setUserFirstName(userFirstName);
+		setUserLastName(userLastName);
+		setToken(token);
+		localStorage.setItem(
+			"userData",
+			JSON.stringify({ userId, token, userFirstName, userLastName })
+		);
 
 		setIsLoggedIn(true);
 	}, []);
@@ -56,7 +65,12 @@ const App = () => {
 		const userData = JSON.parse(localStorage.getItem("userData"));
 
 		if (userData && userData.token) {
-			login(userData.token, userData.userId);
+			login(
+				userData.token,
+				userData.userId,
+				userData.userFirstName,
+				userData.userLastName
+			);
 		}
 	}, [login]);
 
@@ -109,7 +123,9 @@ const App = () => {
 
 	return (
 		<ThemeProvider theme={theme}>
-			<AuthContext.Provider value={{ userId, logout }}>
+			<AuthContext.Provider
+				value={{ token, userId, logout, userFirstName, userLastName }}
+			>
 				{routes}
 			</AuthContext.Provider>
 		</ThemeProvider>
