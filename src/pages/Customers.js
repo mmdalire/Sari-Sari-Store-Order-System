@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useCallback } from "react";
+import React, { useState, useContext, useEffect } from "react";
 
 import AddCircleIcon from "@material-ui/icons/AddCircle";
 import AddIcon from "@material-ui/icons/Add";
@@ -17,6 +17,7 @@ import EditCustomer from "../components/customers/EditCustomer";
 import EmptyContainer from "../components/shared/UI/EmptyContainer";
 import FilterForm from "../components/shared/form/FilterForm";
 import ListingTable from "../components/shared/UI/ListingTable";
+import Loading from "../components/shared/UI/Loading";
 import ModalTemplate from "../components/shared/UI/ModalTemplate";
 import PageTitle from "../components/shared/UI/PageTitle";
 import ReverseBlacklistCustomer from "../components/customers/ReverseBlacklistCustomer";
@@ -26,7 +27,6 @@ import ViewCustomer from "../components/customers/ViewCustomer";
 import { AuthContext } from "../context/auth-context";
 
 import { useHttpClient } from "../hooks/http-hook";
-import Loading from "../components/shared/UI/Loading";
 
 const sortFields = [
 	{ value: "createddate", label: "Created Date" },
@@ -238,12 +238,12 @@ const Customers = () => {
 		}
 
 		try {
+			clearError();
 			const data = await sendRequest(url, "GET", null, {
 				"Content-Type": "application/json",
 				Authorization: `Bearer ${auth.token}`,
 			});
 
-			console.log(data);
 			setList(data.data);
 			setTotal(data.count);
 		} catch (err) {}

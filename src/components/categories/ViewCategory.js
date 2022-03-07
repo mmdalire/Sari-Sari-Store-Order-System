@@ -9,35 +9,6 @@ import { makeStyles } from "@material-ui/styles";
 import ViewCategoryInfo from "./ViewCategoryInfo";
 import ViewProducts from "./ViewProducts";
 
-const DUMMY_DATA = {
-	code: "BIS",
-	name: "BISCUIT",
-	status: "IN-USE",
-};
-
-const DUMMY_PRODUCT_DATA = [
-	{
-		code: "PROD1",
-		name: "PRODUCT1",
-		quantity: 100,
-	},
-	{
-		code: "PROD2",
-		name: "PRODUCT2",
-		quantity: 100,
-	},
-	{
-		code: "PROD3",
-		name: "PRODUCT3",
-		quantity: 100,
-	},
-	{
-		code: "PROD4",
-		name: "PRODUCT4",
-		quantity: 100,
-	},
-];
-
 const useStyles = makeStyles((theme) => {
 	return {
 		root: {
@@ -58,7 +29,7 @@ const useStyles = makeStyles((theme) => {
 	};
 });
 
-const ViewCategory = (props) => {
+const ViewCategory = () => {
 	const classes = useStyles();
 
 	return (
@@ -73,7 +44,7 @@ const ViewCategory = (props) => {
 					}
 				/>
 				<CardContent className={classes.cardContent}>
-					<ViewCategoryInfo data={DUMMY_DATA} />
+					<ViewCategoryInfo />
 				</CardContent>
 			</Card>
 			<Card variant="outlined" className={classes.card}>
@@ -86,7 +57,7 @@ const ViewCategory = (props) => {
 					}
 				/>
 				<CardContent className={classes.cardContent}>
-					<ViewProducts data={DUMMY_PRODUCT_DATA} />
+					<ViewProducts />
 				</CardContent>
 			</Card>
 		</div>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 
 import Button from "@material-ui/core/Button";
 import Grid from "@material-ui/core/Grid";
@@ -7,6 +7,13 @@ import SaveIcon from "@material-ui/icons/Save";
 import TextField from "@material-ui/core/TextField";
 import { makeStyles } from "@material-ui/styles";
 import { green } from "@material-ui/core/colors";
+
+import ErrorDialog from "../shared/UI/ErrorDialog";
+import LoadingDialog from "../shared/UI/LoadingDialog";
+
+import { AuthContext } from "../../context/auth-context";
+
+import { useHttpClient } from "../../hooks/http-hook";
 
 import { formValid, generateCode } from "../../utils/utilities";
 
@@ -32,6 +39,10 @@ const useStyles = makeStyles((theme) => {
 
 const CreateCategory = (props) => {
 	const classes = useStyles();
+
+	const auth = useContext(AuthContext);
+
+	const { isLoading, httpErrors, sendRequest, clearError } = useHttpClient();
 
 	const [fieldData, setFieldData] = useState({
 		name: { value: "", hasError: false, hasTouched: false, error: "" },
@@ -84,86 +95,108 @@ const CreateCategory = (props) => {
 		setIsFormValid(formValid(newFieldData));
 	};
 
-	const handleSubmitCategory = (e) => {
+	const handleSubmitCategory = async (e) => {
 		e.preventDefault();
 
-		if (isFormValid) {
-			const categoryData = {
-				code: fieldData.code.value,
-				name: fieldData.name.value,
-				status: "UNUSED",
-			};
+		const categoryData = {
+			code: fieldData.code.value,
+			name: fieldData.name.value,
+			userId: auth.userId,
+		};
 
-			props.onSave(categoryData);
-		}
+		try {
+			await sendRequest(
+				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/categories`,
+				"POST",
+				JSON.stringify(categoryData),
+				{
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${auth.token}`,
+				}
+			);
+
+			props.onClose("Successfully created category!");
+		} catch (err) {}
 	};
 
 	return (
-		<form
-			noValidate
-			className={classes.root}
-			onSubmit={handleSubmitCategory}
-			autoComplete="off"
-		>
-			<Grid container>
-				<Grid item className={classes.grid} xs={12}>
-					<TextField
-						value={fieldData.name.value}
-						onChange={handleName}
-						size="small"
-						className={classes.textField}
-						id="name"
-						label="Category Name"
-						variant="outlined"
-						required
-						error={fieldData.name.hasError}
-						helperText={fieldData.name.error}
-					/>
-				</Grid>
-				<Grid item className={classes.grid} xs={10}>
-					<TextField
-						value={fieldData.code.value}
-						onChange={handleCode}
-						size="small"
-						className={classes.textField}
-						id="code"
-						label="Assign Code"
-						variant="outlined"
-						required
-						error={fieldData.code.hasError}
-						helperText={fieldData.code.error}
-					/>
-				</Grid>
-				<Grid item className={classes.grid} xs={2}>
-					<Button
-						type="button"
-						disabled={!fieldData.name.value}
-						onClick={handleGenerateCode}
-						color="primary"
-						variant="contained"
-					>
-						<OfflineBoltIcon />
-					</Button>
-				</Grid>
-				<Grid
-					item
-					className={classes.grid}
-					style={{ textAlign: "right" }}
-					xs={12}
+		<>
+			{isLoading && <LoadingDialog />}
+			{!isLoading && httpErrors && (
+				<ErrorDialog
+					open={!!httpErrors}
+					message={httpErrors}
+					onHandleClose={clearError}
+				/>
+			)}
+			{!isLoading && (
+				<form
+					noValidate
+					className={classes.root}
+					onSubmit={handleSubmitCategory}
+					autoComplete="off"
 				>
-					<Button
-						className={classes.success}
-						variant="contained"
-						type="submit"
-						disabled={!isFormValid}
-						startIcon={<SaveIcon />}
-					>
-						{" "}
-						Create Category{" "}
-					</Button>
-				</Grid>
-			</Grid>
-		</form>
+					<Grid container>
+						<Grid item className={classes.grid} xs={12}>
+							<TextField
+								value={fieldData.name.value}
+								onChange={handleName}
+								size="small"
+								className={classes.textField}
+								id="name"
+								label="Category Name"
+								variant="outlined"
+								required
+								error={fieldData.name.hasError}
+								helperText={fieldData.name.error}
+							/>
+						</Grid>
+						<Grid item className={classes.grid} xs={10}>
+							<TextField
+								value={fieldData.code.value}
+								onChange={handleCode}
+								size="small"
+								className={classes.textField}
+								id="code"
+								label="Assign Code"
+								variant="outlined"
+								required
+								error={fieldData.code.hasError}
+								helperText={fieldData.code.error}
+							/>
+						</Grid>
+						<Grid item className={classes.grid} xs={2}>
+							<Button
+								type="button"
+								disabled={!fieldData.name.value}
+								onClick={handleGenerateCode}
+								color="primary"
+								variant="contained"
+							>
+								<OfflineBoltIcon />
+							</Button>
+						</Grid>
+						<Grid
+							item
+							className={classes.grid}
+							style={{ textAlign: "right" }}
+							xs={12}
+						>
+							<Button
+								className={classes.success}
+								variant="contained"
+								type="submit"
+								disabled={!isFormValid}
+								startIcon={<SaveIcon />}
+							>
+								{" "}
+								Create Category{" "}
+							</Button>
+						</Grid>
+					</Grid>
+				</form>
+			)}
+		</>
 	);
 };
 

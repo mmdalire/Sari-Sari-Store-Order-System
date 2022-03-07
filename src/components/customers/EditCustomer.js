@@ -18,18 +18,6 @@ import { useHttpClient } from "../../hooks/http-hook";
 
 import { formValid } from "../../utils/utilities";
 
-const DUMMY_DATA = {
-	customerNo: "CRM202202-0001",
-	lastName: "TEST1",
-	firstName: "TEST1L",
-	middleInitial: "A",
-	phoneNumber: "11112223333",
-	email: "email@email.com",
-	address: "Some address at this address",
-	birthDate: "2021-12-12",
-	status: "ACTIVE",
-};
-
 const useStyles = makeStyles((theme) => {
 	return {
 		root: {
