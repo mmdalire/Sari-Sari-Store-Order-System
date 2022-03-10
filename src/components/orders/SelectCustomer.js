@@ -1,26 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 
+import Pagination from "@material-ui/lab/Pagination";
+
+import EmptyContainer from "../shared/UI/EmptyContainer";
 import FilterForm from "../shared/form/FilterForm";
 import ListingTable from "../shared/UI/ListingTable";
+import Loading from "../shared/UI/Loading";
 
-const DUMMY_ROWS = [
-	{
-		_id: "dfdjshskdskjdasd",
-		customerNo: "CRM202202-0001",
-		lastName: "TEST1",
-		firstName: "TEST1L",
-		middleInitial: "A",
-		status: "ACTIVE",
-	},
-	{
-		_id: "3hdnch6",
-		customerNo: "CRM202202-0002",
-		lastName: "TEST2",
-		firstName: "TEST2L",
-		middleInitial: "B",
-		status: "ACTIVE",
-	},
-];
+import { AuthContext } from "../../context/auth-context";
+
+import { useHttpClient } from "../../hooks/http-hook";
 
 const sortFields = [
 	{ value: "createddate", label: "Created Date" },
@@ -42,27 +31,66 @@ const tableHeaders = [
 ];
 
 const SelectCustomer = (props) => {
-	const [filter, setFilter] = useState({});
-	const [limit, setLimit] = useState(1);
+	const auth = useContext(AuthContext);
+
+	const { isLoading, httpErrors, sendRequest, clearError } = useHttpClient();
+
+	const [filter, setFilter] = useState({
+		search: "",
+		sort: "createddate",
+		order: "desc",
+		limit: 10,
+		additional: {
+			isBlacklisted: false,
+		},
+	});
 	const [page, setPage] = useState(1);
+	const [total, setTotal] = useState(null);
+	const [list, setList] = useState(null);
 
 	const handleFilter = (filters) => {
-		console.log(filters);
 		setFilter(filters);
 	};
 
-	const handleLimit = (limit) => {
-		setLimit(limit);
-		setPage(1);
-	};
-
-	const handlePage = (page) => {
-		setPage(page);
+	const handlePage = (e, newPage) => {
+		setPage(newPage);
 	};
 
 	const handleSelectCustomer = (selectCustomer) => {
 		props.onHandleSelect(selectCustomer);
 	};
+
+	const loadCustomers = async () => {
+		let url = `${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/customers?sort=${filter.sort}&order=${filter.order}&limit=${filter.limit}&page=${page}`;
+
+		//If there is a search keyword
+		if (filter.search) {
+			url = `${url}&search=${filter.search}`;
+		}
+
+		//If the filter specifies to only get the blacklisted ones
+		if (filter.additional.isBlacklisted) {
+			url = `${url}&isBlacklisted`;
+		}
+
+		try {
+			clearError();
+
+			const data = await sendRequest(url, "GET", null, {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${auth.token}`,
+			});
+
+			setList(data.data);
+			setTotal(data.count);
+		} catch (err) {}
+	};
+
+	const totalPages = total ? Math.ceil(total / filter.limit) : 0;
+
+	useEffect(() => {
+		loadCustomers();
+	}, [filter, page]);
 
 	return (
 		<div style={{ marginTop: "10px" }}>
@@ -71,15 +99,44 @@ const SelectCustomer = (props) => {
 				isBlacklisted
 				onHandleFilters={handleFilter}
 			/>
-			<ListingTable
-				headers={tableHeaders}
-				data={DUMMY_ROWS}
-				limit={limit}
-				page={page}
-				onHandleLimit={handleLimit}
-				onHandlePage={handlePage}
-				onHandleSelect={handleSelectCustomer}
-			/>
+			{isLoading && <Loading />}
+			{!isLoading && httpErrors && (
+				<EmptyContainer
+					message={
+						httpErrors ||
+						"Something went wrong. Please try again later."
+					}
+				/>
+			)}
+			{!isLoading && !httpErrors && total === 0 && (
+				<EmptyContainer message="No customers found!" />
+			)}
+			{!isLoading && !httpErrors && total > 0 && (
+				<>
+					<ListingTable
+						headers={tableHeaders}
+						data={list}
+						page={page}
+						onHandlePage={handlePage}
+						onHandleSelect={handleSelectCustomer}
+					/>
+					<div
+						style={{
+							display: "flex",
+							width: "100%",
+							justifyContent: "center",
+							marginTop: 20,
+						}}
+					>
+						<Pagination
+							count={totalPages}
+							color="primary"
+							page={page}
+							onChange={handlePage}
+						/>
+					</div>
+				</>
+			)}
 		</div>
 	);
 };

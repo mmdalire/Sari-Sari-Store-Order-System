@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 
 import Button from "@material-ui/core/Button";
 import FormControl from "@material-ui/core/FormControl";
@@ -14,44 +14,16 @@ import TextField from "@material-ui/core/TextField";
 import { makeStyles } from "@material-ui/styles";
 import { green } from "@material-ui/core/colors";
 
+import EmptyContainer from "../shared/UI/EmptyContainer";
+import ErrorDialog from "../shared/UI/ErrorDialog";
+import Loading from "../shared/UI/Loading";
+import LoadingDialog from "../shared/UI/LoadingDialog";
+
+import { AuthContext } from "../../context/auth-context";
+
+import { useHttpClient } from "../../hooks/http-hook";
+
 import { formValid, generateCode } from "../../utils/utilities";
-
-const DUMMY_CATEGORIES = [
-	{
-		code: "BIS",
-		name: "BISCUIT",
-	},
-	{
-		code: "CAN",
-		name: "CANDY",
-	},
-	{
-		code: "CGO",
-		name: "CANNED GOODS",
-	},
-	{
-		code: "CHI",
-		name: "CHIPS",
-	},
-	{
-		code: "DET",
-		name: "DETERGENT",
-	},
-];
-
-const DUMMY_DATA = {
-	code: "PRD1",
-	name: "PRODUCT 1",
-	categoryName: "CATEGORY 1",
-	category: "BIS",
-	description: "Some description",
-	type: "MASS",
-	unit: "PCS",
-	price: 10,
-	cost: 20,
-	quantity: 20,
-	status: "IN-USE",
-};
 
 const useStyles = makeStyles((theme) => {
 	return {
@@ -73,72 +45,122 @@ const useStyles = makeStyles((theme) => {
 	};
 });
 
-const CreateCustomer = (props) => {
+const EditProduct = (props) => {
 	const classes = useStyles();
 
-	const [fieldData, setFieldData] = useState({
-		name: {
-			value: DUMMY_DATA.name,
-			hasError: false,
-			hasTouched: true,
-			error: "",
-		},
-		category: {
-			value: DUMMY_DATA.category,
-			hasError: false,
-			hasTouched: true,
-			error: "",
-		},
-		categoryName: {
-			value: DUMMY_DATA.categoryName,
-			hasError: false,
-			hasTouched: true,
-			error: "",
-		},
-		code: {
-			value: DUMMY_DATA.code,
-			hasError: false,
-			hasTouched: true,
-			error: "",
-		},
-		description: {
-			value: DUMMY_DATA.description,
-			hasError: false,
-			hasTouched: true,
-			error: "",
-		},
-		type: {
-			value: DUMMY_DATA.type.toLowerCase(),
-			hasError: false,
-			hasTouched: true,
-			error: "",
-		},
-		unit: {
-			value: DUMMY_DATA.unit,
-			hasError: false,
-			hasTouched: true,
-			error: "",
-		},
-		price: {
-			value: DUMMY_DATA.price,
-			hasError: false,
-			hasTouched: true,
-			error: "",
-		},
-		cost: {
-			value: DUMMY_DATA.cost,
-			hasError: false,
-			hasTouched: true,
-			error: "",
-		},
-		quantity: {
-			value: DUMMY_DATA.quantity,
-			hasError: false,
-			hasTouched: true,
-			error: "",
-		},
-	});
+	const auth = useContext(AuthContext);
+
+	const { isLoading, httpErrors, sendRequest, clearError } = useHttpClient();
+
+	const [fieldData, setFieldData] = useState(null);
+	const [categories, setCategories] = useState(null);
 	const [isFormValid, setIsFormValid] = useState(true);
+	const [readingIsLoading, setReadingIsLoading] = useState(null);
+
+	useEffect(() => {
+		const loadProduct = async () => {
+			setReadingIsLoading(true); //Activate loading spinner on the card ITSELF
+			try {
+				const data = await sendRequest(
+					`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/products/${auth.currentId}`,
+					"GET",
+					null,
+					{
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${auth.token}`,
+					}
+				);
+
+				setFieldData({
+					name: {
+						value: data.name,
+						hasError: false,
+						hasTouched: true,
+						error: "",
+					},
+					category: {
+						value: data.categoryCode,
+						hasError: false,
+						hasTouched: true,
+						error: "",
+					},
+					categoryName: {
+						value: data.category,
+						hasError: false,
+						hasTouched: true,
+						error: "",
+					},
+					code: {
+						value: data.code,
+						hasError: false,
+						hasTouched: true,
+						error: "",
+					},
+					description: {
+						value: data.description || "",
+						hasError: false,
+						hasTouched: true,
+						error: "",
+					},
+					type: {
+						value: data.type.toLowerCase(),
+						hasError: false,
+						hasTouched: true,
+						error: "",
+					},
+					unit: {
+						value: data.unit,
+						hasError: false,
+						hasTouched: true,
+						error: "",
+					},
+					price: {
+						value: data.price,
+						hasError: false,
+						hasTouched: true,
+						error: "",
+					},
+					cost: {
+						value: data.cost,
+						hasError: false,
+						hasTouched: true,
+						error: "",
+					},
+					quantity: {
+						value: data.quantity,
+						hasError: false,
+						hasTouched: true,
+						error: "",
+					},
+				});
+			} catch (err) {}
+
+			setReadingIsLoading(false); //Deactivate loading spinner on the card ITSELF
+		};
+
+		loadProduct();
+	}, []);
+
+	//Get categories list for options
+	useEffect(() => {
+		const loadCategories = async () => {
+			try {
+				const data = await sendRequest(
+					`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/categories`,
+					"GET",
+					null,
+					{
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${auth.token}`,
+					}
+				);
+
+				setCategories(data.data);
+			} catch (err) {}
+		};
+
+		loadCategories();
+	}, []);
 
 	const handleName = (e) => {
 		const newFieldData = { ...fieldData };
@@ -199,17 +221,7 @@ const CreateCustomer = (props) => {
 	const handleDescription = (e) => {
 		const newFieldData = { ...fieldData };
 		newFieldData.description.value = e.target.value;
-		newFieldData.description.hasTouched = true;
 
-		if (!e.target.value) {
-			newFieldData.description.hasError = true;
-			newFieldData.description.error = "Description is required!";
-		} else {
-			newFieldData.description.hasError = false;
-			newFieldData.description.error = "";
-		}
-
-		setIsFormValid(formValid(newFieldData, false));
 		setFieldData(newFieldData);
 	};
 
@@ -225,21 +237,12 @@ const CreateCustomer = (props) => {
 		const newFieldData = { ...fieldData };
 		newFieldData.unit.value = e.target.value;
 
-		if (!e.target.value) {
-			newFieldData.unit.hasError = true;
-			newFieldData.unit.error = "Unit is required!";
-		} else {
-			newFieldData.unit.hasError = false;
-			newFieldData.unit.error = "";
-		}
-
-		setIsFormValid(formValid(newFieldData, false));
 		setFieldData(newFieldData);
 	};
 
 	const handleQuantity = (e) => {
 		const newFieldData = { ...fieldData };
-		newFieldData.quantity.value = parseInt(e.target.value);
+		newFieldData.quantity.value = parseInt(e.target.value) || "";
 		newFieldData.quantity.hasTouched = true;
 
 		if (!e.target.value) {
@@ -256,7 +259,7 @@ const CreateCustomer = (props) => {
 
 	const handlePrice = (e) => {
 		const newFieldData = { ...fieldData };
-		newFieldData.price.value = parseFloat(e.target.value);
+		newFieldData.price.value = parseFloat(e.target.value) || "";
 		newFieldData.price.hasTouched = true;
 
 		if (!e.target.value) {
@@ -273,7 +276,7 @@ const CreateCustomer = (props) => {
 
 	const handleCost = (e) => {
 		const newFieldData = { ...fieldData };
-		newFieldData.cost.value = parseFloat(e.target.value);
+		newFieldData.cost.value = parseFloat(e.target.value) || "";
 		newFieldData.cost.hasTouched = true;
 
 		if (!e.target.value) {
@@ -303,226 +306,267 @@ const CreateCustomer = (props) => {
 		setIsFormValid(formValid(newFieldData, false));
 	};
 
-	const handleSubmitProduct = (e) => {
+	const handleSubmitProduct = async (e) => {
 		e.preventDefault();
 
-		if (isFormValid) {
-			const productData = {
-				name: fieldData.name.value,
-				category: fieldData.categoryName.value,
-				code: fieldData.code.value,
-				description: fieldData.description.value,
-				type: fieldData.type.value,
-				unit: fieldData.unit.value,
-				price: fieldData.price.value,
-				cost: fieldData.cost.value,
-				quantity: fieldData.quantity.value,
-				status: "UNUSED",
-			};
+		const productData = {
+			name: fieldData.name.value,
+			category: fieldData.categoryName.value,
+			code: fieldData.code.value,
+			description: fieldData.description.value,
+			type: fieldData.type.value,
+			unit: fieldData.unit.value,
+			price: fieldData.price.value,
+			cost: fieldData.cost.value,
+			quantity: fieldData.quantity.value,
+			userId: auth.userId,
+		};
 
-			props.onSave(productData);
-		}
+		setReadingIsLoading(null); //To avoid displaying the error message in the form itself (editing errors must be in dialog)
+		try {
+			await sendRequest(
+				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/products/${auth.currentId}`,
+				"PATCH",
+				JSON.stringify(productData),
+				{
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${auth.token}`,
+				}
+			);
+
+			props.onClose("Successfully edited category!");
+		} catch (err) {}
 	};
 
 	return (
-		<form
-			className={classes.root}
-			onSubmit={handleSubmitProduct}
-			noValidate
-			autoComplete="off"
-		>
-			<Grid container>
-				<Grid item className={classes.grid} xs={6}>
-					<TextField
-						value={fieldData.name.value}
-						onChange={handleName}
-						size="small"
-						className={classes.textField}
-						id="name"
-						label="Brand Name"
-						variant="outlined"
-						required
-						error={fieldData.name.hasError}
-						helperText={fieldData.name.error}
-					/>
-				</Grid>
-				<Grid item className={classes.grid} xs={6}>
-					<TextField
-						value={fieldData.category.value}
-						onChange={handleCategories}
-						size="small"
-						className={classes.textField}
-						select
-						label="Category"
-						variant="outlined"
-						required
-						error={fieldData.category.hasError}
-						helperText={fieldData.category.error}
-					>
-						{DUMMY_CATEGORIES.map((option) => {
-							return (
-								<MenuItem key={option.code} value={option.code}>
-									{option.name}
-								</MenuItem>
-							);
-						})}
-					</TextField>
-				</Grid>
-				<Grid item className={classes.grid} xs={10}>
-					<TextField
-						value={fieldData.code.value}
-						onChange={handleCode}
-						size="small"
-						className={classes.textField}
-						id="code"
-						label="Code"
-						variant="outlined"
-						required
-						error={fieldData.code.hasError}
-						helperText={fieldData.code.error}
-					/>
-				</Grid>
-				<Grid item className={classes.grid} xs={2}>
-					<Button
-						type="button"
-						style={{ width: "100%" }}
-						disabled={
-							!(fieldData.name.value && fieldData.category.value)
-						}
-						onClick={handleGenerateCode}
-						color="primary"
-						variant="contained"
-					>
-						<OfflineBoltIcon />
-					</Button>
-				</Grid>
-				<Grid item className={classes.grid} xs={12}>
-					<TextField
-						value={fieldData.description.value}
-						onChange={handleDescription}
-						size="small"
-						className={classes.textField}
-						id="description"
-						label="Description"
-						variant="outlined"
-						required
-						error={fieldData.description.hasError}
-						helperText={fieldData.description.error}
-					/>
-				</Grid>
-				<Grid item className={classes.grid} xs={4}>
-					<FormControl component="fieldset">
-						<FormLabel component="legend">Type</FormLabel>
-						<RadioGroup
-							aria-label="type"
-							name="type"
-							value={fieldData.type.value}
-							onChange={handleType}
-							row
-						>
-							<FormControlLabel
-								value="countable"
-								control={
-									<Radio
-										color="primary"
-										checked={
-											fieldData.type.value === "countable"
-										}
-									/>
-								}
-								label="Countable"
-							/>
-							<FormControlLabel
-								value="mass"
-								control={
-									<Radio
-										color="primary"
-										checked={
-											fieldData.type.value === "mass"
-										}
-									/>
-								}
-								label="Mass"
-							/>
-						</RadioGroup>
-					</FormControl>
-				</Grid>
-				<Grid item className={classes.grid} xs={8}>
-					<TextField
-						value={fieldData.unit.value}
-						onChange={handleUnit}
-						size="small"
-						className={classes.textField}
-						id="unit"
-						label="Unit"
-						variant="outlined"
-						error={fieldData.unit.hasError}
-						helperText={fieldData.unit.error}
-					/>
-				</Grid>
-				<Grid item className={classes.grid} xs={4}>
-					<TextField
-						value={fieldData.quantity.value}
-						onChange={handleQuantity}
-						size="small"
-						className={classes.textField}
-						id="quantity"
-						label="Stock quantity"
-						variant="outlined"
-						error={fieldData.quantity.hasError}
-						helperText={fieldData.quantity.error}
-						type="number"
-					/>
-				</Grid>
-				<Grid item className={classes.grid} xs={4}>
-					<TextField
-						value={fieldData.price.value}
-						onChange={handlePrice}
-						size="small"
-						className={classes.textField}
-						id="price"
-						label="Price"
-						variant="outlined"
-						error={fieldData.price.hasError}
-						helperText={fieldData.price.error}
-						type="number"
-					/>
-				</Grid>
-				<Grid item className={classes.grid} xs={4}>
-					<TextField
-						value={fieldData.cost.value}
-						onChange={handleCost}
-						size="small"
-						className={classes.textField}
-						id="cost"
-						label="Cost"
-						variant="outlined"
-						error={fieldData.cost.hasError}
-						helperText={fieldData.cost.error}
-						type="number"
-					/>
-				</Grid>
+		<>
+			{/* Loading in updating */}
+			{
+				isLoading && !readingIsLoading && (
+					<LoadingDialog />
+				) /*Loading dialog appears only when updating the customer*/
+			}
+			{!isLoading && readingIsLoading == null && httpErrors && (
+				<ErrorDialog
+					open={!!httpErrors}
+					message={httpErrors}
+					onHandleClose={clearError}
+				/>
+			)}
 
-				<Grid
-					item
-					className={classes.grid}
-					style={{ textAlign: "right" }}
-					xs={12}
+			{readingIsLoading && <Loading />}
+			{readingIsLoading === false && httpErrors && (
+				<EmptyContainer
+					message={
+						httpErrors ||
+						"Something went wrong. Please try again later."
+					}
+				/>
+			)}
+			{!readingIsLoading && !httpErrors && fieldData && categories && (
+				<form
+					className={classes.root}
+					onSubmit={handleSubmitProduct}
+					noValidate
+					autoComplete="off"
 				>
-					<Button
-						color="secondary"
-						variant="contained"
-						type="submit"
-						disabled={!isFormValid}
-						startIcon={<SaveIcon />}
-					>
-						{" "}
-						Save Changes{" "}
-					</Button>
-				</Grid>
-			</Grid>
-		</form>
+					<Grid container>
+						<Grid item className={classes.grid} xs={6}>
+							<TextField
+								value={fieldData.name.value}
+								onChange={handleName}
+								size="small"
+								className={classes.textField}
+								id="name"
+								label="Brand Name"
+								variant="outlined"
+								required
+								error={fieldData.name.hasError}
+								helperText={fieldData.name.error}
+							/>
+						</Grid>
+						<Grid item className={classes.grid} xs={6}>
+							<TextField
+								value={fieldData.category.value}
+								onChange={handleCategories}
+								size="small"
+								className={classes.textField}
+								select
+								label="Category"
+								variant="outlined"
+								required
+								error={fieldData.category.hasError}
+								helperText={fieldData.category.error}
+							>
+								{categories.map((option) => {
+									return (
+										<MenuItem
+											key={option.code}
+											value={option.code}
+										>
+											{option.name}
+										</MenuItem>
+									);
+								})}
+							</TextField>
+						</Grid>
+						<Grid item className={classes.grid} xs={10}>
+							<TextField
+								value={fieldData.code.value}
+								onChange={handleCode}
+								size="small"
+								className={classes.textField}
+								id="code"
+								label="Code"
+								variant="outlined"
+								required
+								error={fieldData.code.hasError}
+								helperText={fieldData.code.error}
+							/>
+						</Grid>
+						<Grid item className={classes.grid} xs={2}>
+							<Button
+								type="button"
+								style={{ width: "100%" }}
+								disabled={
+									!(
+										fieldData.name.value &&
+										fieldData.category.value
+									)
+								}
+								onClick={handleGenerateCode}
+								color="primary"
+								variant="contained"
+							>
+								<OfflineBoltIcon />
+							</Button>
+						</Grid>
+						<Grid item className={classes.grid} xs={12}>
+							<TextField
+								value={fieldData.description.value}
+								onChange={handleDescription}
+								size="small"
+								className={classes.textField}
+								id="description"
+								label="Description"
+								variant="outlined"
+							/>
+						</Grid>
+						<Grid item className={classes.grid} xs={4}>
+							<FormControl component="fieldset">
+								<FormLabel component="legend">Type</FormLabel>
+								<RadioGroup
+									aria-label="type"
+									name="type"
+									value={fieldData.type.value}
+									onChange={handleType}
+									row
+								>
+									<FormControlLabel
+										value="countable"
+										control={
+											<Radio
+												color="primary"
+												checked={
+													fieldData.type.value ===
+													"countable"
+												}
+											/>
+										}
+										label="Countable"
+									/>
+									<FormControlLabel
+										value="mass"
+										control={
+											<Radio
+												color="primary"
+												checked={
+													fieldData.type.value ===
+													"mass"
+												}
+											/>
+										}
+										label="Mass"
+									/>
+								</RadioGroup>
+							</FormControl>
+						</Grid>
+						<Grid item className={classes.grid} xs={8}>
+							<TextField
+								value={fieldData.unit.value}
+								onChange={handleUnit}
+								size="small"
+								className={classes.textField}
+								id="unit"
+								label="Unit"
+								variant="outlined"
+							/>
+						</Grid>
+						<Grid item className={classes.grid} xs={4}>
+							<TextField
+								value={fieldData.quantity.value}
+								onChange={handleQuantity}
+								size="small"
+								className={classes.textField}
+								id="quantity"
+								label="Stock quantity"
+								variant="outlined"
+								error={fieldData.quantity.hasError}
+								helperText={fieldData.quantity.error}
+								type="number"
+							/>
+						</Grid>
+						<Grid item className={classes.grid} xs={4}>
+							<TextField
+								value={fieldData.price.value}
+								onChange={handlePrice}
+								size="small"
+								className={classes.textField}
+								id="price"
+								label="Price"
+								variant="outlined"
+								error={fieldData.price.hasError}
+								helperText={fieldData.price.error}
+								type="number"
+							/>
+						</Grid>
+						<Grid item className={classes.grid} xs={4}>
+							<TextField
+								value={fieldData.cost.value}
+								onChange={handleCost}
+								size="small"
+								className={classes.textField}
+								id="cost"
+								label="Cost"
+								variant="outlined"
+								error={fieldData.cost.hasError}
+								helperText={fieldData.cost.error}
+								type="number"
+							/>
+						</Grid>
+
+						<Grid
+							item
+							className={classes.grid}
+							style={{ textAlign: "right" }}
+							xs={12}
+						>
+							<Button
+								color="secondary"
+								variant="contained"
+								type="submit"
+								disabled={!isFormValid}
+								startIcon={<SaveIcon />}
+							>
+								{" "}
+								Save Changes{" "}
+							</Button>
+						</Grid>
+					</Grid>
+				</form>
+			)}
+		</>
 	);
 };
 
-export default CreateCustomer;
+export default EditProduct;

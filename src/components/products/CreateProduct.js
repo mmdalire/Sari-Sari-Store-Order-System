@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 
 import Button from "@material-ui/core/Button";
 import FormControl from "@material-ui/core/FormControl";
@@ -14,30 +14,14 @@ import TextField from "@material-ui/core/TextField";
 import { makeStyles } from "@material-ui/styles";
 import { green } from "@material-ui/core/colors";
 
-import { formValid, generateCode } from "../../utils/utilities";
+import ErrorDialog from "../shared/UI/ErrorDialog";
+import LoadingDialog from "../shared/UI/LoadingDialog";
 
-const DUMMY_CATEGORIES = [
-	{
-		code: "BIS",
-		name: "BISCUIT",
-	},
-	{
-		code: "CAN",
-		name: "CANDY",
-	},
-	{
-		code: "CGO",
-		name: "CANNED GOODS",
-	},
-	{
-		code: "CHI",
-		name: "CHIPS",
-	},
-	{
-		code: "DET",
-		name: "DETERGENT",
-	},
-];
+import { AuthContext } from "../../context/auth-context";
+
+import { useHttpClient } from "../../hooks/http-hook";
+
+import { formValid, generateCode } from "../../utils/utilities";
 
 const useStyles = makeStyles((theme) => {
 	return {
@@ -62,6 +46,10 @@ const useStyles = makeStyles((theme) => {
 const CreateCustomer = (props) => {
 	const classes = useStyles();
 
+	const auth = useContext(AuthContext);
+
+	const { isLoading, httpErrors, sendRequest, clearError } = useHttpClient();
+
 	const [fieldData, setFieldData] = useState({
 		name: { value: "", hasError: false, hasTouched: false, error: "" },
 		category: { value: "", hasError: false, hasTouched: false, error: "" },
@@ -75,7 +63,7 @@ const CreateCustomer = (props) => {
 		description: {
 			value: "",
 			hasError: false,
-			hasTouched: false,
+			hasTouched: true,
 			error: "",
 		},
 		type: {
@@ -99,6 +87,7 @@ const CreateCustomer = (props) => {
 		},
 		quantity: { value: "", hasError: false, hasTouched: false, error: "" },
 	});
+	const [categories, setCategories] = useState(null);
 	const [isFormValid, setIsFormValid] = useState(false);
 
 	const handleName = (e) => {
@@ -160,15 +149,6 @@ const CreateCustomer = (props) => {
 	const handleDescription = (e) => {
 		const newFieldData = { ...fieldData };
 		newFieldData.description.value = e.target.value;
-		newFieldData.description.hasTouched = true;
-
-		if (!e.target.value) {
-			newFieldData.description.hasError = true;
-			newFieldData.description.error = "Description is required!";
-		} else {
-			newFieldData.description.hasError = false;
-			newFieldData.description.error = "";
-		}
 
 		setIsFormValid(formValid(newFieldData));
 		setFieldData(newFieldData);
@@ -186,21 +166,13 @@ const CreateCustomer = (props) => {
 		const newFieldData = { ...fieldData };
 		newFieldData.unit.value = e.target.value;
 
-		if (!e.target.value) {
-			newFieldData.unit.hasError = true;
-			newFieldData.unit.error = "Unit is required!";
-		} else {
-			newFieldData.unit.hasError = false;
-			newFieldData.unit.error = "";
-		}
-
 		setIsFormValid(formValid(newFieldData));
 		setFieldData(newFieldData);
 	};
 
 	const handleQuantity = (e) => {
 		const newFieldData = { ...fieldData };
-		newFieldData.quantity.value = parseInt(e.target.value);
+		newFieldData.quantity.value = parseInt(e.target.value) || "";
 		newFieldData.quantity.hasTouched = true;
 
 		if (!e.target.value) {
@@ -217,7 +189,7 @@ const CreateCustomer = (props) => {
 
 	const handlePrice = (e) => {
 		const newFieldData = { ...fieldData };
-		newFieldData.price.value = parseFloat(e.target.value);
+		newFieldData.price.value = parseFloat(e.target.value) || "";
 		newFieldData.price.hasTouched = true;
 
 		if (!e.target.value) {
@@ -234,7 +206,7 @@ const CreateCustomer = (props) => {
 
 	const handleCost = (e) => {
 		const newFieldData = { ...fieldData };
-		newFieldData.cost.value = parseFloat(e.target.value);
+		newFieldData.cost.value = parseFloat(e.target.value) || "";
 		newFieldData.cost.hasTouched = true;
 
 		if (!e.target.value) {
@@ -264,218 +236,266 @@ const CreateCustomer = (props) => {
 		setIsFormValid(formValid(newFieldData));
 	};
 
-	const handleSubmitProduct = (e) => {
+	const handleSubmitProduct = async (e) => {
 		e.preventDefault();
 
-		if (isFormValid) {
-			const productData = {
-				name: fieldData.name.value,
-				category: fieldData.categoryName.value,
-				code: fieldData.code.value,
-				description: fieldData.description.value,
-				type: fieldData.type.value,
-				unit: fieldData.unit.value,
-				price: fieldData.price.value,
-				cost: fieldData.cost.value,
-				quantity: fieldData.quantity.value,
-				status: "UNUSED",
-			};
+		const productData = {
+			name: fieldData.name.value,
+			category: fieldData.categoryName.value,
+			code: fieldData.code.value,
+			description: fieldData.description.value,
+			type: fieldData.type.value,
+			unit: fieldData.unit.value,
+			price: fieldData.price.value,
+			cost: fieldData.cost.value,
+			quantity: fieldData.quantity.value,
+			userId: auth.userId,
+		};
 
-			props.onSave(productData);
-		}
+		try {
+			await sendRequest(
+				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/products`,
+				"POST",
+				JSON.stringify(productData),
+				{
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${auth.token}`,
+				}
+			);
+
+			props.onClose("Successfully created product!");
+		} catch (err) {}
 	};
 
-	return (
-		<form
-			className={classes.root}
-			onSubmit={handleSubmitProduct}
-			noValidate
-			autoComplete="off"
-		>
-			<Grid container>
-				<Grid item className={classes.grid} xs={6}>
-					<TextField
-						value={fieldData.name.value}
-						onChange={handleName}
-						size="small"
-						className={classes.textField}
-						id="name"
-						label="Brand Name"
-						variant="outlined"
-						required
-						error={fieldData.name.hasError}
-						helperText={fieldData.name.error}
-					/>
-				</Grid>
-				<Grid item className={classes.grid} xs={6}>
-					<TextField
-						value={fieldData.category.value}
-						onChange={handleCategories}
-						size="small"
-						className={classes.textField}
-						select
-						label="Category"
-						variant="outlined"
-						required
-						error={fieldData.category.hasError}
-						helperText={fieldData.category.error}
-					>
-						{DUMMY_CATEGORIES.map((option) => {
-							return (
-								<MenuItem key={option.code} value={option.code}>
-									{option.name}
-								</MenuItem>
-							);
-						})}
-					</TextField>
-				</Grid>
-				<Grid item className={classes.grid} xs={10}>
-					<TextField
-						value={fieldData.code.value}
-						onChange={handleCode}
-						size="small"
-						className={classes.textField}
-						id="code"
-						label="Code"
-						variant="outlined"
-						required
-						error={fieldData.code.hasError}
-						helperText={fieldData.code.error}
-					/>
-				</Grid>
-				<Grid item className={classes.grid} xs={2}>
-					<Button
-						type="button"
-						style={{ width: "100%" }}
-						disabled={
-							!(fieldData.name.value && fieldData.category.value)
-						}
-						onClick={handleGenerateCode}
-						color="primary"
-						variant="contained"
-					>
-						<OfflineBoltIcon />
-					</Button>
-				</Grid>
-				<Grid item className={classes.grid} xs={12}>
-					<TextField
-						value={fieldData.description.value}
-						onChange={handleDescription}
-						size="small"
-						className={classes.textField}
-						id="description"
-						label="Description"
-						variant="outlined"
-						required
-						error={fieldData.description.hasError}
-						helperText={fieldData.description.error}
-					/>
-				</Grid>
-				<Grid item className={classes.grid} xs={4}>
-					<FormControl component="fieldset">
-						<FormLabel component="legend">Type</FormLabel>
-						<RadioGroup
-							aria-label="type"
-							name="type"
-							value={fieldData.type.value}
-							onChange={handleType}
-							row
-						>
-							<FormControlLabel
-								value="countable"
-								control={
-									<Radio
-										color="primary"
-										checked={
-											fieldData.type.value === "countable"
-										}
-									/>
-								}
-								label="Countable"
-							/>
-							<FormControlLabel
-								value="mass"
-								control={<Radio color="primary" />}
-								label="Mass"
-							/>
-						</RadioGroup>
-					</FormControl>
-				</Grid>
-				<Grid item className={classes.grid} xs={8}>
-					<TextField
-						value={fieldData.unit.value}
-						onChange={handleUnit}
-						size="small"
-						className={classes.textField}
-						id="unit"
-						label="Unit"
-						variant="outlined"
-						error={fieldData.unit.hasError}
-						helperText={fieldData.unit.error}
-					/>
-				</Grid>
-				<Grid item className={classes.grid} xs={4}>
-					<TextField
-						value={fieldData.quantity.value}
-						onChange={handleQuantity}
-						size="small"
-						className={classes.textField}
-						id="quantity"
-						label="Stock quantity"
-						variant="outlined"
-						error={fieldData.quantity.hasError}
-						helperText={fieldData.quantity.error}
-						type="number"
-					/>
-				</Grid>
-				<Grid item className={classes.grid} xs={4}>
-					<TextField
-						value={fieldData.price.value}
-						onChange={handlePrice}
-						size="small"
-						className={classes.textField}
-						id="price"
-						label="Price"
-						variant="outlined"
-						error={fieldData.price.hasError}
-						helperText={fieldData.price.error}
-						type="number"
-					/>
-				</Grid>
-				<Grid item className={classes.grid} xs={4}>
-					<TextField
-						value={fieldData.cost.value}
-						onChange={handleCost}
-						size="small"
-						className={classes.textField}
-						id="cost"
-						label="Cost"
-						variant="outlined"
-						error={fieldData.cost.hasError}
-						helperText={fieldData.cost.error}
-						type="number"
-					/>
-				</Grid>
+	//Get categories list for options
+	useEffect(() => {
+		const loadCategories = async () => {
+			try {
+				const data = await sendRequest(
+					`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/categories`,
+					"GET",
+					null,
+					{
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${auth.token}`,
+					}
+				);
 
-				<Grid
-					item
-					className={classes.grid}
-					style={{ textAlign: "right" }}
-					xs={12}
+				setCategories(data.data);
+			} catch (err) {}
+		};
+
+		loadCategories();
+	}, []);
+
+	return (
+		<>
+			{isLoading && <LoadingDialog />}
+			{!isLoading && httpErrors && (
+				<ErrorDialog
+					open={!!httpErrors}
+					message={httpErrors}
+					onHandleClose={clearError}
+				/>
+			)}
+			{!isLoading && categories && (
+				<form
+					className={classes.root}
+					onSubmit={handleSubmitProduct}
+					noValidate
+					autoComplete="off"
 				>
-					<Button
-						className={classes.success}
-						variant="contained"
-						type="submit"
-						disabled={!isFormValid}
-						startIcon={<SaveIcon />}
-					>
-						{" "}
-						Create Product{" "}
-					</Button>
-				</Grid>
-			</Grid>
-		</form>
+					<Grid container>
+						<Grid item className={classes.grid} xs={6}>
+							<TextField
+								value={fieldData.name.value}
+								onChange={handleName}
+								size="small"
+								className={classes.textField}
+								id="name"
+								label="Brand Name"
+								variant="outlined"
+								required
+								error={fieldData.name.hasError}
+								helperText={fieldData.name.error}
+							/>
+						</Grid>
+						<Grid item className={classes.grid} xs={6}>
+							<TextField
+								value={fieldData.category.value}
+								onChange={handleCategories}
+								size="small"
+								className={classes.textField}
+								select
+								label="Category"
+								variant="outlined"
+								required
+								error={fieldData.category.hasError}
+								helperText={fieldData.category.error}
+							>
+								{categories.map((option) => {
+									return (
+										<MenuItem
+											key={option.code}
+											value={option.code}
+										>
+											{option.name}
+										</MenuItem>
+									);
+								})}
+							</TextField>
+						</Grid>
+						<Grid item className={classes.grid} xs={10}>
+							<TextField
+								value={fieldData.code.value}
+								onChange={handleCode}
+								size="small"
+								className={classes.textField}
+								id="code"
+								label="Code"
+								variant="outlined"
+								required
+								error={fieldData.code.hasError}
+								helperText={fieldData.code.error}
+							/>
+						</Grid>
+						<Grid item className={classes.grid} xs={2}>
+							<Button
+								type="button"
+								style={{ width: "100%" }}
+								disabled={
+									!(
+										fieldData.name.value &&
+										fieldData.category.value
+									)
+								}
+								onClick={handleGenerateCode}
+								color="primary"
+								variant="contained"
+							>
+								<OfflineBoltIcon />
+							</Button>
+						</Grid>
+						<Grid item className={classes.grid} xs={12}>
+							<TextField
+								value={fieldData.description.value}
+								onChange={handleDescription}
+								size="small"
+								className={classes.textField}
+								id="description"
+								label="Description"
+								variant="outlined"
+							/>
+						</Grid>
+						<Grid item className={classes.grid} xs={4}>
+							<FormControl component="fieldset">
+								<FormLabel component="legend">Type</FormLabel>
+								<RadioGroup
+									aria-label="type"
+									name="type"
+									value={fieldData.type.value}
+									onChange={handleType}
+									row
+								>
+									<FormControlLabel
+										value="countable"
+										control={
+											<Radio
+												color="primary"
+												checked={
+													fieldData.type.value ===
+													"countable"
+												}
+											/>
+										}
+										label="Countable"
+									/>
+									<FormControlLabel
+										value="mass"
+										control={<Radio color="primary" />}
+										label="Mass"
+									/>
+								</RadioGroup>
+							</FormControl>
+						</Grid>
+						<Grid item className={classes.grid} xs={8}>
+							<TextField
+								value={fieldData.unit.value}
+								onChange={handleUnit}
+								size="small"
+								placeholder="Default: pieces"
+								className={classes.textField}
+								id="unit"
+								label="Unit"
+								variant="outlined"
+								error={fieldData.unit.hasError}
+								helperText={fieldData.unit.error}
+							/>
+						</Grid>
+						<Grid item className={classes.grid} xs={4}>
+							<TextField
+								value={fieldData.quantity.value}
+								onChange={handleQuantity}
+								size="small"
+								className={classes.textField}
+								id="quantity"
+								label="Stock quantity"
+								variant="outlined"
+								error={fieldData.quantity.hasError}
+								helperText={fieldData.quantity.error}
+								type="number"
+							/>
+						</Grid>
+						<Grid item className={classes.grid} xs={4}>
+							<TextField
+								value={fieldData.price.value}
+								onChange={handlePrice}
+								size="small"
+								className={classes.textField}
+								id="price"
+								label="Price"
+								variant="outlined"
+								error={fieldData.price.hasError}
+								helperText={fieldData.price.error}
+								type="number"
+							/>
+						</Grid>
+						<Grid item className={classes.grid} xs={4}>
+							<TextField
+								value={fieldData.cost.value}
+								onChange={handleCost}
+								size="small"
+								className={classes.textField}
+								id="cost"
+								label="Cost"
+								variant="outlined"
+								error={fieldData.cost.hasError}
+								helperText={fieldData.cost.error}
+								type="number"
+							/>
+						</Grid>
+
+						<Grid
+							item
+							className={classes.grid}
+							style={{ textAlign: "right" }}
+							xs={12}
+						>
+							<Button
+								className={classes.success}
+								variant="contained"
+								type="submit"
+								disabled={!isFormValid}
+								startIcon={<SaveIcon />}
+							>
+								{" "}
+								Create Product{" "}
+							</Button>
+						</Grid>
+					</Grid>
+				</form>
+			)}
+		</>
 	);
 };
 

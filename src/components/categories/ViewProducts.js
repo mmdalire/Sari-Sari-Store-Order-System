@@ -42,6 +42,7 @@ const ViewCustomerCredit = () => {
 			);
 
 			setViewData(data);
+			setTotal(data.count);
 		} catch (err) {}
 	};
 
@@ -50,6 +51,8 @@ const ViewCustomerCredit = () => {
 	}, [page]);
 
 	const totalPages = total ? Math.ceil(total / limit) : 0;
+
+	console.log(viewData);
 
 	return (
 		<>

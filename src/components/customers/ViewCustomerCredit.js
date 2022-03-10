@@ -37,8 +37,15 @@ const ViewCustomerCredit = (props) => {
 
 	const { isLoading, httpErrors, sendRequest, clearError } = useHttpClient();
 
+	const limit = 10;
 	const [readingIsLoading, setReadingIsLoading] = useState(false);
 	const [viewDataCredits, setViewDataCredits] = useState(null);
+	const [page, setPage] = useState(1);
+	const [total, setTotal] = useState(null);
+
+	const handlePage = (e, newPage) => {
+		setPage(newPage);
+	};
 
 	useEffect(() => {
 		const loadCustomerCredits = async () => {
@@ -55,12 +62,15 @@ const ViewCustomerCredit = (props) => {
 				);
 
 				setViewDataCredits(data);
+				setTotal(data.count);
 			} catch (err) {}
 			setReadingIsLoading(false);
 		};
 
 		loadCustomerCredits();
 	}, []);
+
+	const totalPages = total ? Math.ceil(total / limit) : 0;
 
 	return (
 		<div>
@@ -101,8 +111,7 @@ const ViewCustomerCredit = (props) => {
 							<ListingTable
 								headers={tableHeaders}
 								data={viewDataCredits.orders}
-								limit={10}
-								page={1}
+								page={page}
 							/>
 							<div
 								style={{
@@ -113,11 +122,10 @@ const ViewCustomerCredit = (props) => {
 								}}
 							>
 								<Pagination
-									// count={totalPages}
-									count={10}
+									count={totalPages}
 									color="primary"
-									// page={page}
-									// onChange={handlePage}
+									page={page}
+									onChange={handlePage}
 								/>
 							</div>
 						</>

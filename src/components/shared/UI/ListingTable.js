@@ -1,4 +1,5 @@
 import React from "react";
+import moment from "moment";
 
 import { makeStyles } from "@material-ui/core/styles";
 import AddIcon from "@material-ui/icons/Add";
@@ -128,11 +129,17 @@ const ListingTable = (props) => {
 		<TableBody>
 			{props.data.map((row) => {
 				return (
-					<TableRow hover key={row._id}>
+					<TableRow hover key={row._id || row.code}>
 						{props.headers.map((header) => {
 							let value;
+
 							if (header.id === "avatar") {
 								value = <AvatarTemplate data={row} />;
+							} else if (
+								header.id === "customer" &&
+								typeof row === "object"
+							) {
+								value = `${row.customer.firstName} ${row.customer.lastName}`;
 							} else if (header.id === "status") {
 								value = chipStatus(row.status);
 							} else if (header.id === "actions") {
@@ -175,13 +182,20 @@ const ListingTable = (props) => {
 							}
 							//This column is for computing of subtotal per product (in VIEWING orders)
 							else if (header.id === "subtotal") {
-								value = row.price * row.quantity;
+								value = row.price * row.orderQuantity;
 							} else if (header.id === "credit") {
 								value = creditStatus(row.credit);
 							}
 							//This column is for the PRTs existed related in a product (in VIEWING orders)
 							else if (header.id === "relatedPrtNo") {
 								value = prt(row.prtNo);
+							} else if (
+								header.id === "orderDate" ||
+								header.id === "createddate"
+							) {
+								value = moment(row.createddate).format(
+									"MMMM D, YYYY hh:mm A"
+								);
 							} else {
 								value = row[header.id];
 							}

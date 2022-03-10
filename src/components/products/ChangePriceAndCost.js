@@ -31,7 +31,7 @@ const useStyles = makeStyles((theme) => {
 	};
 });
 
-const RestockProduct = (props) => {
+const ChangePriceAndCost = (props) => {
 	const classes = useStyles();
 
 	const auth = useContext(AuthContext);
@@ -69,8 +69,14 @@ const RestockProduct = (props) => {
 						hasTouched: true,
 						error: "",
 					},
-					quantity: {
-						value: data.quantity,
+					price: {
+						value: data.price,
+						hasError: false,
+						hasTouched: true,
+						error: "",
+					},
+					cost: {
+						value: data.cost,
 						hasError: false,
 						hasTouched: true,
 						error: "",
@@ -84,17 +90,34 @@ const RestockProduct = (props) => {
 		loadProduct();
 	}, []);
 
-	const handleQuantity = (e) => {
+	const handlePrice = (e) => {
 		const newFieldData = { ...fieldData };
-		newFieldData.quantity.value = parseInt(e.target.value);
-		newFieldData.quantity.hasTouched = true;
+		newFieldData.price.value = parseInt(e.target.value);
+		newFieldData.price.hasTouched = true;
 
 		if (!e.target.value) {
-			newFieldData.quantity.hasError = true;
-			newFieldData.quantity.error = "Stock quantity is required!";
+			newFieldData.price.hasError = true;
+			newFieldData.price.error = "Price is required!";
 		} else {
-			newFieldData.quantity.hasError = false;
-			newFieldData.quantity.error = "";
+			newFieldData.price.hasError = false;
+			newFieldData.price.error = "";
+		}
+
+		setIsFormValid(formValid(newFieldData, false));
+		setFieldData(newFieldData);
+	};
+
+	const handleCost = (e) => {
+		const newFieldData = { ...fieldData };
+		newFieldData.cost.value = parseInt(e.target.value);
+		newFieldData.cost.hasTouched = true;
+
+		if (!e.target.value) {
+			newFieldData.cost.hasError = true;
+			newFieldData.cost.error = "Cost is required!";
+		} else {
+			newFieldData.cost.hasError = false;
+			newFieldData.cost.error = "";
 		}
 
 		setIsFormValid(formValid(newFieldData, false));
@@ -105,14 +128,15 @@ const RestockProduct = (props) => {
 		e.preventDefault();
 
 		const productData = {
-			quantity: fieldData.quantity.value,
+			price: fieldData.price.value,
+			cost: fieldData.cost.value,
 			userId: auth.userId,
 		};
 
 		setReadingIsLoading(null); //To avoid displaying the error message in the form itself (editing errors must be in dialog)
 		try {
 			const data = await sendRequest(
-				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/products/${auth.currentId}/restock`,
+				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/products/${auth.currentId}/changePriceAndCost`,
 				"PATCH",
 				JSON.stringify(productData),
 				{
@@ -124,7 +148,6 @@ const RestockProduct = (props) => {
 			props.onClose(data.message);
 		} catch (err) {}
 	};
-
 	return (
 		<>
 			{/* Loading in updating */}
@@ -180,19 +203,34 @@ const RestockProduct = (props) => {
 								readOnly
 							/>
 						</Grid>
-						<Grid item className={classes.grid} xs={12}>
+						<Grid item className={classes.grid} xs={6}>
 							<TextField
-								value={fieldData.quantity.value}
-								onChange={handleQuantity}
+								value={fieldData.price.value}
+								onChange={handlePrice}
 								size="small"
 								className={classes.textField}
-								id="quantity"
-								label="Quantity"
+								id="price"
+								label="Price"
 								variant="outlined"
 								type="number"
 								required
-								error={fieldData.quantity.hasError}
-								helperText={fieldData.quantity.error}
+								error={fieldData.price.hasError}
+								helperText={fieldData.price.error}
+							/>
+						</Grid>
+						<Grid item className={classes.grid} xs={6}>
+							<TextField
+								value={fieldData.cost.value}
+								onChange={handleCost}
+								size="small"
+								className={classes.textField}
+								id="cost"
+								label="Cost"
+								variant="outlined"
+								type="number"
+								required
+								error={fieldData.cost.hasError}
+								helperText={fieldData.cost.error}
 							/>
 						</Grid>
 						<Grid
@@ -219,4 +257,4 @@ const RestockProduct = (props) => {
 	);
 };
 
-export default RestockProduct;
+export default ChangePriceAndCost;

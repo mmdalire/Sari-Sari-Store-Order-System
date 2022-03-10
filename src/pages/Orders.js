@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import moment from "moment";
 
 import AddIcon from "@material-ui/icons/Add";
@@ -6,91 +6,24 @@ import Button from "@material-ui/core/Button";
 import CancelIcon from "@material-ui/icons/Cancel";
 import Container from "@material-ui/core/Container";
 import EditIcon from "@material-ui/icons/Edit";
+import Pagination from "@material-ui/lab/Pagination";
 import VisibilityIcon from "@material-ui/icons/Visibility";
 
 import CancelOrder from "../components/orders/CancelOrder";
 import CreateOrder from "../components/orders/CreateOrder";
 import EditOrder from "../components/orders/EditOrder";
+import EmptyContainer from "../components/shared/UI/EmptyContainer";
 import FilterForm from "../components/shared/form/FilterForm";
 import ListingTable from "../components/shared/UI/ListingTable";
+import Loading from "../components/shared/UI/Loading";
 import ModalTemplate from "../components/shared/UI/ModalTemplate";
 import PageTitle from "../components/shared/UI/PageTitle";
+import SnackbarTemplate from "../components/shared/UI/SnackbarTemplate";
 import ViewOrder from "../components/orders/ViewOrder";
 
-const DUMMY_ROWS = [
-	{
-		poNo: "PONO202202-0001",
-		customer: "TEST1 TESTL1",
-		totalProducts: 20,
-		totalPrice: 200,
-		totalReturnedPrice: 0,
-		credit: 0,
-		orderDate: moment("2022-02-18T15:49:04.781Z").format(
-			"MMMM Do YYYY, h:mm:ss a"
-		),
-		status: "SUBMIT",
-	},
-	{
-		poNo: "PONO202202-0002",
-		customer: "TEST2 TESTL2",
-		totalProducts: 20,
-		totalPrice: 200,
-		totalReturnedPrice: 0,
-		credit: 0,
-		orderDate: moment("2022-02-18T15:49:04.781Z").format(
-			"MMMM Do YYYY, h:mm:ss a"
-		),
-		status: "SUBMIT",
-	},
-	{
-		poNo: "PONO202202-0003",
-		customer: "TEST3 TESTL3",
-		totalProducts: 20,
-		totalPrice: 200,
-		totalReturnedPrice: 0,
-		credit: 0,
-		orderDate: moment("2022-02-18T15:49:04.781Z").format(
-			"MMMM Do YYYY, h:mm:ss a"
-		),
-		status: "DRAFT",
-	},
-	{
-		poNo: "PONO202202-0004",
-		customer: "TEST4 TESTL4",
-		totalProducts: 20,
-		totalPrice: 200,
-		totalReturnedPrice: 0,
-		credit: 0,
-		orderDate: moment("2022-02-18T15:49:04.781Z").format(
-			"MMMM Do YYYY, h:mm:ss a"
-		),
-		status: "CANCELLED",
-	},
-	{
-		poNo: "PONO202202-0005",
-		customer: "TEST5 TESTL5",
-		totalProducts: 20,
-		totalPrice: 200,
-		totalReturnedPrice: 0,
-		credit: 0,
-		orderDate: moment("2022-02-18T15:49:04.781Z").format(
-			"MMMM Do YYYY, h:mm:ss a"
-		),
-		status: "DRAFT",
-	},
-	{
-		poNo: "PONO202202-0006",
-		customer: "TEST6 TESTL6",
-		totalProducts: 20,
-		totalPrice: 200,
-		totalReturnedPrice: 0,
-		credit: 1,
-		orderDate: moment("2022-02-18T15:49:04.781Z").format(
-			"MMMM Do YYYY, h:mm:ss a"
-		),
-		status: "SUBMIT",
-	},
-];
+import { AuthContext } from "../context/auth-context";
+
+import { useHttpClient } from "../hooks/http-hook";
 
 const sortFields = [
 	{ value: "createddate", label: "Created Date" },
@@ -103,7 +36,7 @@ const sortFields = [
 ];
 
 const tableHeaders = [
-	{ id: "poNo", label: "Order Number", minWidth: 150 },
+	{ id: "poNo", label: "Order Number", minWidth: 100 },
 	{ id: "customer", label: "Customer Name", minWidth: 100 },
 	{ id: "totalProducts", label: "Number of products" },
 	{ id: "totalPrice", label: "Total Amount" },
@@ -183,33 +116,45 @@ const createOrderModal = {
 };
 
 const Orders = () => {
-	const [filter, setFilter] = useState({});
-	const [limit, setLimit] = useState(1);
+	const auth = useContext(AuthContext);
+
+	const { isLoading, httpErrors, sendRequest, clearError } = useHttpClient();
+
+	const [warnings, setWarnings] = useState(null);
+	const [filter, setFilter] = useState({
+		search: "",
+		sort: "createddate",
+		order: "desc",
+		limit: 10,
+		additional: {
+			isBlacklisted: false,
+		},
+	});
 	const [page, setPage] = useState(1);
+	const [total, setTotal] = useState(null);
+	const [list, setList] = useState(null);
 	const [openModal, setOpenModal] = useState(false);
 	const [modalConfig, setModalConfig] = useState(createOrderModal);
 
+	const handleClearWarnings = () => {
+		setWarnings(null);
+	};
+
 	const handleFilter = (filters) => {
-		console.log(filters);
 		setFilter(filters);
 	};
 
-	const handleLimit = (limit) => {
-		setLimit(limit);
-		setPage(1);
+	const handlePage = (e, newPage) => {
+		setPage(newPage);
 	};
 
-	const handlePage = (page) => {
-		setPage(page);
-	};
+	const handleCloseModal = (message = "") => {
+		if (message) {
+			setWarnings(message);
 
-	const handleCloseModal = () => {
-		setOpenModal(false);
-	};
+			loadOrders();
+		}
 
-	const handleAddOrder = (newOrder) => {
-		DUMMY_ROWS.push(newOrder);
-		console.log(newOrder);
 		setOpenModal(false);
 	};
 
@@ -230,18 +175,55 @@ const Orders = () => {
 	const orderBody = () => {
 		switch (modalConfig.operation) {
 			case "add":
-				return <CreateOrder onSave={handleAddOrder} />;
+				return <CreateOrder onClose={handleCloseModal} />;
 			case "view":
 				return <ViewOrder />;
 			case "edit":
-				return <EditOrder />;
+				return <EditOrder onClose={handleCloseModal} />;
 			case "cancel":
-				return <CancelOrder onCancel={handleCloseModal} />;
+				return <CancelOrder onClose={handleCloseModal} />;
 		}
 	};
 
+	const loadOrders = async () => {
+		let url = `${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/orders?sort=${filter.sort}&order=${filter.order}&limit=${filter.limit}&page=${page}`;
+
+		//If there is a search keyword
+		if (filter.search) {
+			url = `${url}&search=${filter.search}`;
+		}
+
+		try {
+			clearError();
+
+			const data = await sendRequest(url, "GET", null, {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${auth.token}`,
+			});
+
+			setList(data.data);
+			setTotal(data.count);
+		} catch (err) {}
+	};
+
+	const totalPages = total ? Math.ceil(total / filter.limit) : 0;
+
+	useEffect(() => {
+		loadOrders();
+	}, [filter, page]);
+
 	return (
 		<>
+			{/* Snackbars */}
+			{warnings && (
+				<SnackbarTemplate
+					open={!!warnings}
+					type="success"
+					message={warnings}
+					onHandleClose={handleClearWarnings}
+				/>
+			)}
+
 			{/* Modals */}
 			<ModalTemplate
 				open={openModal}
@@ -268,16 +250,45 @@ const Orders = () => {
 				>
 					Add Order
 				</Button>
-				<ListingTable
-					headers={tableHeaders}
-					data={DUMMY_ROWS}
-					limit={limit}
-					page={page}
-					availableMenu={optionMenu}
-					onHandleLimit={handleLimit}
-					onHandlePage={handlePage}
-					onHandleModalConfig={handleModalConfig}
-				/>
+				{isLoading && <Loading />}
+				{!isLoading && httpErrors && (
+					<EmptyContainer
+						message={
+							httpErrors ||
+							"Something went wrong. Please try again later."
+						}
+					/>
+				)}
+				{!isLoading && !httpErrors && total === 0 && (
+					<EmptyContainer message="No orders found!" />
+				)}
+				{!isLoading && !httpErrors && total > 0 && (
+					<>
+						<ListingTable
+							headers={tableHeaders}
+							data={list}
+							page={page}
+							availableMenu={optionMenu}
+							onHandlePage={handlePage}
+							onHandleModalConfig={handleModalConfig}
+						/>
+						<div
+							style={{
+								display: "flex",
+								width: "100%",
+								justifyContent: "center",
+								marginTop: 20,
+							}}
+						>
+							<Pagination
+								count={totalPages}
+								color="primary"
+								page={page}
+								onChange={handlePage}
+							/>
+						</div>
+					</>
+				)}
 			</Container>
 		</>
 	);

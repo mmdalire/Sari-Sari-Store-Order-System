@@ -1,55 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 
 import AddIcon from "@material-ui/icons/Add";
 import Button from "@material-ui/core/Button";
 import Container from "@material-ui/core/Container";
 import DeleteIcon from "@material-ui/icons/Delete";
 import EditIcon from "@material-ui/icons/Edit";
+import Pagination from "@material-ui/lab/Pagination";
 import RestoreIcon from "@material-ui/icons/Restore";
 import VisibilityIcon from "@material-ui/icons/Visibility";
 
+import ChangePriceAndCost from "../components/products/ChangePriceAndCost";
 import CreateProduct from "../components/products/CreateProduct";
 import DeleteProduct from "../components/products/DeleteProduct";
 import EditProduct from "../components/products/EditProduct";
+import EmptyContainer from "../components/shared/UI/EmptyContainer";
 import FilterForm from "../components/shared/form/FilterForm";
 import ListingTable from "../components/shared/UI/ListingTable";
+import Loading from "../components/shared/UI/Loading";
+import LocalOfferIcon from "@material-ui/icons/LocalOffer";
 import ModalTemplate from "../components/shared/UI/ModalTemplate";
 import PageTitle from "../components/shared/UI/PageTitle";
 import RestockProduct from "../components/products/RestockProduct";
+import SnackbarTemplate from "../components/shared/UI/SnackbarTemplate";
 import ViewProduct from "../components/products/ViewProduct";
 
-const DUMMY_ROWS = [
-	{
-		code: "PRD1",
-		name: "PRODUCT 1",
-		category: "CATEGORY 1",
-		unit: "PCS",
-		price: 10,
-		cost: 20,
-		quantity: 20,
-		status: "IN-USE",
-	},
-	{
-		code: "PRD2",
-		name: "PRODUCT 2",
-		category: "CATEGORY 2",
-		unit: "PCS",
-		price: 15,
-		cost: 25,
-		quantity: 25,
-		status: "IN-USE",
-	},
-	{
-		code: "PRD3",
-		name: "PRODUCT 3",
-		category: "CATEGORY 3",
-		unit: "PCS",
-		price: 20,
-		cost: 30,
-		quantity: 30,
-		status: "UNUSED",
-	},
-];
+import { AuthContext } from "../context/auth-context";
+
+import { useHttpClient } from "../hooks/http-hook";
 
 const sortFields = [
 	{ value: "createddate", label: "Created Date" },
@@ -127,6 +104,23 @@ const optionMenus = [
 		},
 	},
 	{
+		id: "changePriceCost",
+		label: "Change Price & Cost",
+		activateIn: ["IN-USE"],
+		modalConfig: {
+			top: 170,
+			left: 450,
+			width: 500,
+			title: "Change Price and Cost",
+			icon: (
+				<LocalOfferIcon
+					style={{ fontSize: "30px", marginRight: "8px" }}
+					color="primary"
+				/>
+			),
+		},
+	},
+	{
 		id: "delete",
 		label: "Delete",
 		activateIn: ["UNUSED"],
@@ -160,33 +154,45 @@ const createProductModal = {
 };
 
 const Products = () => {
-	const [filter, setFilter] = useState({});
-	const [limit, setLimit] = useState(1);
+	const auth = useContext(AuthContext);
+
+	const { isLoading, httpErrors, sendRequest, clearError } = useHttpClient();
+
+	const [warnings, setWarnings] = useState(null);
+	const [filter, setFilter] = useState({
+		search: "",
+		sort: "createddate",
+		order: "desc",
+		limit: 10,
+		additional: {
+			isBlacklisted: false,
+		},
+	});
 	const [page, setPage] = useState(1);
+	const [total, setTotal] = useState(null);
+	const [list, setList] = useState(null);
 	const [openModal, setOpenModal] = useState(false);
 	const [modalConfig, setModalConfig] = useState(createProductModal);
 
+	const handleClearWarnings = () => {
+		setWarnings(null);
+	};
+
 	const handleFilter = (filters) => {
-		console.log(filters);
 		setFilter(filters);
 	};
 
-	const handleLimit = (limit) => {
-		setLimit(limit);
-		setPage(1);
+	const handlePage = (e, newPage) => {
+		setPage(newPage);
 	};
 
-	const handlePage = (page) => {
-		setPage(page);
-	};
+	const handleCloseModal = (message = "") => {
+		if (message) {
+			setWarnings(message);
 
-	const handleCloseModal = () => {
-		setOpenModal(false);
-	};
+			loadProducts();
+		}
 
-	const handleAddProduct = (newProduct) => {
-		DUMMY_ROWS.push(newProduct);
-		console.log(newProduct);
 		setOpenModal(false);
 	};
 
@@ -207,20 +213,59 @@ const Products = () => {
 	const productBody = () => {
 		switch (modalConfig.operation) {
 			case "add":
-				return <CreateProduct onSave={handleAddProduct} />;
+				return <CreateProduct onClose={handleCloseModal} />;
 			case "view":
 				return <ViewProduct />;
 			case "edit":
-				return <EditProduct />;
+				return <EditProduct onClose={handleCloseModal} />;
 			case "restock":
-				return <RestockProduct />;
+				return <RestockProduct onClose={handleCloseModal} />;
+			case "changePriceCost":
+				return <ChangePriceAndCost onClose={handleCloseModal} />;
 			case "delete":
-				return <DeleteProduct onCancel={handleCloseModal} />;
+				return <DeleteProduct onClose={handleCloseModal} />;
 		}
 	};
 
+	const loadProducts = async () => {
+		let url = `${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/products?sort=${filter.sort}&order=${filter.order}&limit=${filter.limit}&page=${page}`;
+
+		//If there is a search keyword
+		if (filter.search) {
+			url = `${url}&search=${filter.search}`;
+		}
+
+		try {
+			clearError();
+
+			const data = await sendRequest(url, "GET", null, {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${auth.token}`,
+			});
+
+			setList(data.data);
+			setTotal(data.count);
+		} catch (err) {}
+	};
+
+	const totalPages = total ? Math.ceil(total / filter.limit) : 0;
+
+	useEffect(() => {
+		loadProducts();
+	}, [filter, page]);
+
 	return (
 		<>
+			{/* Snackbars */}
+			{warnings && (
+				<SnackbarTemplate
+					open={!!warnings}
+					type="success"
+					message={warnings}
+					onHandleClose={handleClearWarnings}
+				/>
+			)}
+
 			{/* Modals */}
 			<ModalTemplate
 				open={openModal}
@@ -246,16 +291,45 @@ const Products = () => {
 				>
 					Add Product
 				</Button>
-				<ListingTable
-					headers={tableHeaders}
-					data={DUMMY_ROWS}
-					limit={limit}
-					page={page}
-					availableMenu={optionMenus}
-					onHandleLimit={handleLimit}
-					onHandlePage={handlePage}
-					onHandleModalConfig={handleModalConfig}
-				/>
+				{isLoading && <Loading />}
+				{!isLoading && httpErrors && (
+					<EmptyContainer
+						message={
+							httpErrors ||
+							"Something went wrong. Please try again later."
+						}
+					/>
+				)}
+				{!isLoading && !httpErrors && total === 0 && (
+					<EmptyContainer message="No products found!" />
+				)}
+				{!isLoading && !httpErrors && total > 0 && (
+					<>
+						<ListingTable
+							headers={tableHeaders}
+							data={list}
+							page={page}
+							availableMenu={optionMenus}
+							onHandlePage={handlePage}
+							onHandleModalConfig={handleModalConfig}
+						/>
+						<div
+							style={{
+								display: "flex",
+								width: "100%",
+								justifyContent: "center",
+								marginTop: 20,
+							}}
+						>
+							<Pagination
+								count={totalPages}
+								color="primary"
+								page={page}
+								onChange={handlePage}
+							/>
+						</div>
+					</>
+				)}
 			</Container>
 		</>
 	);

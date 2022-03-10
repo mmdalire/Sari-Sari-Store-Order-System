@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 
 import AddShoppingCartIcon from "@material-ui/icons/AddShoppingCart";
 import Button from "@material-ui/core/Button";
@@ -15,10 +15,16 @@ import { makeStyles } from "@material-ui/styles";
 import { green } from "@material-ui/core/colors";
 
 import ErrorDialog from "../shared/UI/ErrorDialog";
+import LoadingDialog from "../shared/UI/LoadingDialog";
 import ModalTemplate from "../shared/UI/ModalTemplate";
 import PrepareOrder from "./PrepareOrder";
 import SelectCustomer from "./SelectCustomer";
 import SelectProduct from "./SelectProduct";
+
+import { AuthContext } from "../../context/auth-context";
+
+import { useHttpClient } from "../../hooks/http-hook";
+
 import { formValid } from "../../utils/utilities";
 
 const useStyles = makeStyles((theme) => {
@@ -80,6 +86,10 @@ const selectProductModal = {
 
 const CreateOrder = (props) => {
 	const classes = useStyles();
+
+	const auth = useContext(AuthContext);
+
+	const { isLoading, httpErrors, sendRequest, clearError } = useHttpClient();
 
 	const creditRef = useRef(null);
 	const [formOrderValid, setFormOrderValid] = useState({
@@ -225,6 +235,7 @@ const CreateOrder = (props) => {
 
 	const handleClearErrors = () => {
 		setErrors(null);
+		clearError();
 	};
 
 	const handleSelectCustomer = (customer) => {
@@ -317,7 +328,7 @@ const CreateOrder = (props) => {
 		setOrderData(newOrderData);
 	};
 
-	const handleSubmitOrder = (e) => {
+	const handleSubmitOrder = async (e) => {
 		e.preventDefault();
 
 		//Get the status of the order
@@ -339,9 +350,22 @@ const CreateOrder = (props) => {
 			credit: orderData.credit.value,
 			status,
 			remarks: orderData.remarks.value,
+			userId: auth.userId,
 		};
 
-		props.onSave(submitOrderData);
+		try {
+			await sendRequest(
+				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/orders`,
+				"POST",
+				JSON.stringify(submitOrderData),
+				{
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${auth.token}`,
+				}
+			);
+
+			props.onClose("Successfully created order!");
+		} catch (err) {}
 	};
 
 	const selectBody = () => {
@@ -355,226 +379,238 @@ const CreateOrder = (props) => {
 
 	return (
 		<>
+			{isLoading && <LoadingDialog />}
+
 			{/* Dialogs */}
-			{errors && (
+			{!isLoading && (errors || httpErrors) && (
 				<ErrorDialog
-					open={!!errors}
-					message={errors}
+					open={!!(errors || httpErrors)}
+					message={errors || httpErrors}
 					onHandleClose={handleClearErrors}
 				/>
 			)}
 
 			{/* Modals */}
-			<ModalTemplate
-				open={openModal}
-				onClose={handleCloseModal}
-				top={modalConfig.top}
-				left={modalConfig.left}
-				width={modalConfig.width}
-				modalTitle={modalConfig.title}
-				modalIcon={modalConfig.icon}
-			>
-				{selectBody()}
-			</ModalTemplate>
-
-			<form noValidate autoComplete="off" className={classes.root}>
-				<Card variant="outlined" className={classes.card}>
-					<CardHeader
-						className={classes.cardHeader}
-						title={
-							<Typography variant="h6" color="primary">
-								Customer Information
-							</Typography>
-						}
-					/>
-					<CardContent className={classes.cardContent}>
-						<Grid container>
-							<Grid item className={classes.grid} xs={4}>
-								<Button
-									color="primary"
-									variant="contained"
-									startIcon={<PersonAddIcon />}
-									onClick={handleModalConfigSelectCustomer}
-								>
-									{" "}
-									Select Customer{" "}
-								</Button>
-							</Grid>
-
-							<Grid item className={classes.grid} xs={8}>
-								<TextField
-									value={customerData.customerNumber.value}
-									size="small"
-									className={classes.textField}
-									id="customer-number"
-									label="Customer Number"
-									variant="outlined"
-									readOnly
-									disabled
-								/>
-							</Grid>
-							<Grid item className={classes.grid} xs={5}>
-								<TextField
-									value={customerData.lastName.value}
-									size="small"
-									className={classes.textField}
-									id="customer-last-name"
-									label="Last Name"
-									variant="outlined"
-									readOnly
-									disabled
-								/>
-							</Grid>
-							<Grid item className={classes.grid} xs={5}>
-								<TextField
-									value={customerData.firstName.value}
-									size="small"
-									className={classes.textField}
-									id="customer-first-name"
-									label="First Name"
-									variant="outlined"
-									readOnly
-									disabled
-								/>
-							</Grid>
-							<Grid item className={classes.grid} xs={2}>
-								<TextField
-									value={customerData.middleInitial.value}
-									size="small"
-									className={classes.textField}
-									id="customer-middle-initial"
-									label="MI"
-									variant="outlined"
-									readOnly
-									disabled
-								/>
-							</Grid>
-						</Grid>
-					</CardContent>
-				</Card>
-				<Card variant="outlined" className={classes.card}>
-					<CardHeader
-						className={classes.cardHeader}
-						title={
-							<Typography variant="h6" color="primary">
-								Cart
-							</Typography>
-						}
-					/>
-					<CardContent className={classes.cardContent}>
-						<Grid container>
-							<Grid item className={classes.grid} xs={12}>
-								<Button
-									color="primary"
-									variant="contained"
-									startIcon={<AddShoppingCartIcon />}
-									onClick={handleModalConfigSelectProduct}
-								>
-									{" "}
-									Select Product{" "}
-								</Button>
-							</Grid>
-
-							<Grid item className={classes.grid} xs={12}>
-								<PrepareOrder
-									data={productsData.value}
-									total={productsData.total}
-									onQuantityChange={handleChangeOrderQuantity}
-									onDelete={handleDeleteProduct}
-								/>
-							</Grid>
-
-							<Grid item className={classes.grid} xs={12}>
-								<TextField
-									inputRef={creditRef}
-									value={orderData.credit.value}
-									onChange={handleCreditChange}
-									size="small"
-									type="number"
-									className={classes.textField}
-									id="credit"
-									label="Credit"
-									variant="outlined"
-									error={orderData.credit.hasError}
-									helperText={orderData.credit.error}
-								/>
-							</Grid>
-						</Grid>
-					</CardContent>
-				</Card>
-				<Card variant="outlined" className={classes.card}>
-					<CardHeader
-						className={classes.cardHeader}
-						title={
-							<Typography variant="h6" color="primary">
-								Remarks
-							</Typography>
-						}
-					/>
-					<CardContent className={classes.cardContent}>
-						<Grid container>
-							<Grid item className={classes.grid} xs={12}>
-								<TextField
-									value={orderData.remarks.value}
-									onChange={handleRemarksChange}
-									size="small"
-									multiline
-									rows={3}
-									className={classes.textField}
-									id="remarks"
-									variant="outlined"
-									placeholder="Optional"
-								/>
-							</Grid>
-						</Grid>
-					</CardContent>
-				</Card>
-
-				<Grid
-					item
-					className={classes.grid}
-					style={{ textAlign: "right" }}
-					xs={12}
+			{!isLoading && (
+				<ModalTemplate
+					open={openModal}
+					onClose={handleCloseModal}
+					top={modalConfig.top}
+					left={modalConfig.left}
+					width={modalConfig.width}
+					modalTitle={modalConfig.title}
+					modalIcon={modalConfig.icon}
 				>
-					<Button
-						color="primary"
-						variant="outlined"
-						style={{ marginRight: 10 }}
-						type="submit"
-						id="draft"
-						onClick={handleSubmitOrder}
-						disabled={
-							!(
-								formOrderValid.customers &&
-								formOrderValid.products &&
-								formOrderValid.credit
-							)
-						}
-						startIcon={<DraftsIcon />}
+					{selectBody()}
+				</ModalTemplate>
+			)}
+
+			{!isLoading && (
+				<form noValidate autoComplete="off" className={classes.root}>
+					<Card variant="outlined" className={classes.card}>
+						<CardHeader
+							className={classes.cardHeader}
+							title={
+								<Typography variant="h6" color="primary">
+									Customer Information
+								</Typography>
+							}
+						/>
+						<CardContent className={classes.cardContent}>
+							<Grid container>
+								<Grid item className={classes.grid} xs={4}>
+									<Button
+										color="primary"
+										variant="contained"
+										startIcon={<PersonAddIcon />}
+										onClick={
+											handleModalConfigSelectCustomer
+										}
+									>
+										{" "}
+										Select Customer{" "}
+									</Button>
+								</Grid>
+
+								<Grid item className={classes.grid} xs={8}>
+									<TextField
+										value={
+											customerData.customerNumber.value
+										}
+										size="small"
+										className={classes.textField}
+										id="customer-number"
+										label="Customer Number"
+										variant="outlined"
+										readOnly
+										disabled
+									/>
+								</Grid>
+								<Grid item className={classes.grid} xs={5}>
+									<TextField
+										value={customerData.lastName.value}
+										size="small"
+										className={classes.textField}
+										id="customer-last-name"
+										label="Last Name"
+										variant="outlined"
+										readOnly
+										disabled
+									/>
+								</Grid>
+								<Grid item className={classes.grid} xs={5}>
+									<TextField
+										value={customerData.firstName.value}
+										size="small"
+										className={classes.textField}
+										id="customer-first-name"
+										label="First Name"
+										variant="outlined"
+										readOnly
+										disabled
+									/>
+								</Grid>
+								<Grid item className={classes.grid} xs={2}>
+									<TextField
+										value={customerData.middleInitial.value}
+										size="small"
+										className={classes.textField}
+										id="customer-middle-initial"
+										label="MI"
+										variant="outlined"
+										readOnly
+										disabled
+									/>
+								</Grid>
+							</Grid>
+						</CardContent>
+					</Card>
+					<Card variant="outlined" className={classes.card}>
+						<CardHeader
+							className={classes.cardHeader}
+							title={
+								<Typography variant="h6" color="primary">
+									Cart
+								</Typography>
+							}
+						/>
+						<CardContent className={classes.cardContent}>
+							<Grid container>
+								<Grid item className={classes.grid} xs={12}>
+									<Button
+										color="primary"
+										variant="contained"
+										startIcon={<AddShoppingCartIcon />}
+										onClick={handleModalConfigSelectProduct}
+									>
+										{" "}
+										Select Product{" "}
+									</Button>
+								</Grid>
+
+								<Grid item className={classes.grid} xs={12}>
+									<PrepareOrder
+										data={productsData.value}
+										total={productsData.total}
+										onQuantityChange={
+											handleChangeOrderQuantity
+										}
+										onDelete={handleDeleteProduct}
+									/>
+								</Grid>
+
+								<Grid item className={classes.grid} xs={12}>
+									<TextField
+										inputRef={creditRef}
+										value={orderData.credit.value}
+										onChange={handleCreditChange}
+										size="small"
+										type="number"
+										className={classes.textField}
+										id="credit"
+										label="Credit"
+										variant="outlined"
+										error={orderData.credit.hasError}
+										helperText={orderData.credit.error}
+									/>
+								</Grid>
+							</Grid>
+						</CardContent>
+					</Card>
+					<Card variant="outlined" className={classes.card}>
+						<CardHeader
+							className={classes.cardHeader}
+							title={
+								<Typography variant="h6" color="primary">
+									Remarks
+								</Typography>
+							}
+						/>
+						<CardContent className={classes.cardContent}>
+							<Grid container>
+								<Grid item className={classes.grid} xs={12}>
+									<TextField
+										value={orderData.remarks.value}
+										onChange={handleRemarksChange}
+										size="small"
+										multiline
+										rows={3}
+										className={classes.textField}
+										id="remarks"
+										variant="outlined"
+										placeholder="Optional"
+									/>
+								</Grid>
+							</Grid>
+						</CardContent>
+					</Card>
+
+					<Grid
+						item
+						className={classes.grid}
+						style={{ textAlign: "right" }}
+						xs={12}
 					>
-						{" "}
-						Save as draft{" "}
-					</Button>
-					<Button
-						color="primary"
-						variant="contained"
-						type="submit"
-						id="submit"
-						onClick={handleSubmitOrder}
-						disabled={
-							!(
-								formOrderValid.customers &&
-								formOrderValid.products &&
-								formOrderValid.credit
-							)
-						}
-						startIcon={<SendIcon />}
-					>
-						{" "}
-						Submit Order{" "}
-					</Button>
-				</Grid>
-			</form>
+						<Button
+							color="primary"
+							variant="outlined"
+							style={{ marginRight: 10 }}
+							type="submit"
+							id="draft"
+							onClick={handleSubmitOrder}
+							disabled={
+								!(
+									formOrderValid.customers &&
+									formOrderValid.products &&
+									formOrderValid.credit
+								)
+							}
+							startIcon={<DraftsIcon />}
+						>
+							{" "}
+							Save as draft{" "}
+						</Button>
+						<Button
+							color="primary"
+							variant="contained"
+							type="submit"
+							id="submit"
+							onClick={handleSubmitOrder}
+							disabled={
+								!(
+									formOrderValid.customers &&
+									formOrderValid.products &&
+									formOrderValid.credit
+								)
+							}
+							startIcon={<SendIcon />}
+						>
+							{" "}
+							Submit Order{" "}
+						</Button>
+					</Grid>
+				</form>
+			)}
 		</>
 	);
 };

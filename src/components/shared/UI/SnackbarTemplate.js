@@ -7,7 +7,7 @@ const SnackbarTemplate = (props) => {
 	return (
 		<Snackbar
 			open={props.open}
-			autoHideDuration={7000}
+			autoHideDuration={props.duration || 7000}
 			onClose={props.onHandleClose}
 		>
 			<MuiAlert

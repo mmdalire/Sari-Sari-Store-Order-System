@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useContext } from "react";
 
 import AddShoppingCartIcon from "@material-ui/icons/AddShoppingCart";
 import Button from "@material-ui/core/Button";
@@ -13,53 +13,25 @@ import Typography from "@material-ui/core/Typography";
 import { makeStyles } from "@material-ui/styles";
 import { green } from "@material-ui/core/colors";
 
+import EmptyContainer from "../shared/UI/EmptyContainer";
 import ErrorDialog from "../shared/UI/ErrorDialog";
 import ListingTable from "../shared/UI/ListingTable";
+import Loading from "../shared/UI/Loading";
+import LoadingDialog from "../shared/UI/LoadingDialog";
 import ModalTemplate from "../shared/UI/ModalTemplate";
 import PrepareOrder from "./PrepareOrder";
 import SnackbarTemplate from "../shared/UI/SnackbarTemplate";
 import SelectProduct from "./SelectProduct";
 
-const DUMMY_DATA = {
-	_id: "620fbff03f030d924d878abc",
-	poNo: "PONO202202-0001",
-	customer: {
-		id: "sdshjdshdsjdhsd",
-		customerNo: "CRM202202-0001",
-		firstName: "SIMON",
-		lastName: "OLIVER",
-		middleInitial: "C",
-	},
-	products: [
-		{
-			code: "CGO-MSA",
-			name: "MEGA SARDINES",
-			quantity: 10,
-			orderQuantity: 10,
-			price: 21,
-			cost: 17,
-			_id: "620fbff03f030d924d878abd",
-		},
-		{
-			code: "CGO-LSA",
-			name: "LIGO SARDINES",
-			quantity: 11,
-			orderQuantity: 10,
-			price: 21,
-			cost: 17,
-			_id: "620fbff03f030d924d878abe",
-		},
-	],
-	credit: 0,
-	status: "DRAFT",
-	createdDate: "2022-02-18T15:49:04.781Z",
-};
+import { AuthContext } from "../../context/auth-context";
+
+import { useHttpClient } from "../../hooks/http-hook";
 
 const tableHeaders = [
 	{ id: "code", label: "Product Code", minWidth: 150 },
 	{ id: "name", label: "Brand Name", minWidth: 100 },
 	{ id: "price", label: "Price", align: "right" },
-	{ id: "quantity", label: "Order Quantity", align: "right" },
+	{ id: "orderQuantity", label: "Order Quantity", align: "right" },
 	{ id: "subtotal", label: "Subtotal", align: "right" },
 ];
 
@@ -106,161 +78,171 @@ const selectProductModal = {
 	),
 };
 
-const EditOrder = () => {
+const EditOrder = (props) => {
 	const classes = useStyles();
 
-	const total = DUMMY_DATA.products.reduce(
-		(total, product) => total + product.quantity * product.price,
-		0
-	);
+	const auth = useContext(AuthContext);
 
-	const creditRef = useRef(null);
+	const { isLoading, httpErrors, sendRequest, clearError } = useHttpClient();
+
 	const [warnings, setWarnings] = useState(null);
 	const [formOrderValid, setFormOrderValid] = useState({
-		products: false || DUMMY_DATA.status === "SUBMIT", //Remove validation for products if the order status is SUBMIT
+		products: false, //Remove validation for products if the order status is SUBMIT
 		credit: true, //By default, 0 is the preferred credit
 	});
 	const [errors, setErrors] = useState(null);
 	const [openModal, setOpenModal] = useState(false);
 	const [modalConfig, setModalConfig] = useState(selectProductModal);
-	const [customerData] = useState({
-		id: {
-			value: DUMMY_DATA.customer.id,
-			hasError: false,
-			hasTouched: true,
-			error: "",
-		},
-		customerNumber: {
-			value: DUMMY_DATA.customer.customerNo,
-			hasError: false,
-			hasTouched: true,
-			error: "",
-		},
-		firstName: {
-			value: DUMMY_DATA.customer.firstName,
-			hasError: false,
-			hasTouched: true,
-			error: "",
-		},
-		lastName: {
-			value: DUMMY_DATA.customer.lastName,
-			hasError: false,
-			hasTouched: true,
-			error: "",
-		},
-		middleInitial: {
-			value: DUMMY_DATA.customer.middleInitial,
-			hasError: false,
-			hasTouched: true,
-			error: "",
-		},
-	});
+	const [orderData, setOrderData] = useState(null);
+	const [readingIsLoading, setReadingIsLoading] = useState(null);
 
-	const [productsData, setProductsData] = useState({
-		value: DUMMY_DATA.products,
-		total: DUMMY_DATA.products.reduce(
-			(total, product) => total + product.orderQuantity * product.price,
-			0
-		),
-		hasError: false,
-		hasTouched: false,
-		error: "",
-	});
+	useEffect(() => {
+		const loadOrderInfo = async () => {
+			try {
+				setReadingIsLoading(true); //Activate loading spinner on the card ITSELF
+				const data = await sendRequest(
+					`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/orders/${auth.currentId}`,
+					"GET",
+					null,
+					{
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${auth.token}`,
+					}
+				);
 
-	const [orderData, setOrderData] = useState({
-		credit: {
-			value: DUMMY_DATA.credit,
-			hasError: false,
-			hasTouched: true,
-			error: "",
-		},
-		remarks: {
-			value: "",
-			hasError: false,
-			hasTouched: true,
-			error: "",
-		},
-	});
+				setOrderData({
+					customerId: {
+						value: data.customer._id,
+						hasError: false,
+						hasTouched: true,
+						error: "",
+					},
+					customerNumber: {
+						value: data.customer.customerNumber,
+						hasError: false,
+						hasTouched: true,
+						error: "",
+					},
+					firstName: {
+						value: data.customer.firstName,
+						hasError: false,
+						hasTouched: true,
+						error: "",
+					},
+					lastName: {
+						value: data.customer.lastName,
+						hasError: false,
+						hasTouched: true,
+						error: "",
+					},
+					middleInitial: {
+						value: data.customer.middleInitial,
+						hasError: false,
+						hasTouched: true,
+						error: "",
+					},
+					products: {
+						value: data.products,
+						hasError: false,
+						hasTouched: false,
+						error: "",
+					},
+					total: data.products.reduce(
+						(total, product) =>
+							total + product.orderQuantity * product.price,
+						0
+					),
+					credit: {
+						value: data.credit,
+						hasError: false,
+						hasTouched: true,
+						error: "",
+					},
+					remarks: {
+						value: data.remarks,
+						hasError: false,
+						hasTouched: true,
+						error: "",
+					},
+					status: {
+						value: data.status,
+					},
+				});
+			} catch (err) {}
+
+			setReadingIsLoading(false); //Deactivate loading spinner on the card ITSELF
+		};
+
+		loadOrderInfo();
+	}, []);
 
 	//Check if all quantities of each product is valid (if each order quantity doesn't exceed the stock quantity)
 	useEffect(() => {
-		const isAllValid = productsData.value.every((product) => {
-			return product.quantity >= product.orderQuantity;
-		});
+		if (orderData) {
+			const isAllValid = orderData.products.value.every((product) => {
+				return product.quantity >= product.orderQuantity;
+			});
 
-		if (!isAllValid) {
-			setWarnings(
-				"Some products have an order quantity that exceeds the stock quantity. Please make sure that the given information is correct."
-			);
-		} else {
-			setWarnings(
-				"Please make sure that the given information is correct."
-			);
+			if (!isAllValid) {
+				setWarnings(
+					"Some products have an order quantity that exceeds the stock quantity. Please make sure that the given information is correct."
+				);
+			} else {
+				setWarnings(
+					"Please make sure that the given information is correct."
+				);
+			}
 		}
-	}, []);
+	}, [readingIsLoading]);
 
 	//Update the disable prop of the submit buttons whenever a product is being deleted
 	useEffect(() => {
-		const newFormValidData = { ...formOrderValid };
-		newFormValidData.products =
-			productsData.value.length > 0 &&
-			productsData.value.every(
-				(product) =>
-					product.orderQuantity > 0 &&
-					product.quantity > product.orderQuantity
-			);
+		if (orderData && orderData.products.value.length >= 0) {
+			const newFormValidData = { ...formOrderValid };
+			newFormValidData.products =
+				orderData.products.value.length > 0 &&
+				orderData.products.value.every(
+					(product) =>
+						product.orderQuantity > 0 &&
+						product.quantity > product.orderQuantity
+				);
 
-		setFormOrderValid(newFormValidData);
-	}, [productsData.value.length]);
-
-	//Update credit errors whenever any of products inside of the cart changes
-	useEffect(() => {
-		if (productsData.total > 0) {
-			updateCredit(creditRef.current.value);
-		}
-	}, [productsData.total]);
-
-	const updateCredit = (credit) => {
-		const newOrderData = { ...orderData };
-		const newFormValidData = { ...formOrderValid };
-
-		//Credit has no input
-		if (!credit) {
-			newOrderData.credit.value = "";
-			newOrderData.credit.hasError = false;
-			newOrderData.credit.error = "";
-			setOrderData(newOrderData);
-
-			newFormValidData.credit = true;
 			setFormOrderValid(newFormValidData);
-			return;
+		}
+	}, [orderData]);
+
+	// Update the submit button disability based on credits and order validations
+	useEffect(() => {
+		const newFormOrderValid = { ...formOrderValid };
+		//Validation for products
+
+		//If all products has quantities
+		if (orderData && orderData.total > 0) {
+			newFormOrderValid.products =
+				orderData.products.value.length > 0 &&
+				orderData.products.value.every(
+					(product) =>
+						product.orderQuantity > 0 &&
+						product.quantity >= product.orderQuantity
+				);
 		}
 
-		//Credit has input but still is being checked for validations
-		newOrderData.credit.value = parseInt(credit);
-		if (parseInt(credit) < 0) {
-			newOrderData.credit.hasError = true;
-			newOrderData.credit.error = "Credit cannot be a negative value!";
-			setOrderData(newOrderData);
-
-			newFormValidData.credit = false;
-		} else if (parseInt(credit) > productsData.total) {
-			newOrderData.credit.hasError = true;
-			newOrderData.credit.error =
-				"Credit cannot be greater than the total amount!";
-			setOrderData(newOrderData);
-
-			newFormValidData.credit = false;
-		} else {
-			newOrderData.credit.hasError = false;
-			newOrderData.credit.error = "";
-			setOrderData(newOrderData);
-
-			newFormValidData.credit = true;
+		//Validation for credit
+		if (orderData && orderData.credit.hasError) {
+			newFormOrderValid.credit = false;
+		} else if (orderData && !orderData.credit.hasError) {
+			// If the total is lesser than the credit
+			if (orderData.total < orderData.credit.value) {
+				newFormOrderValid.credit = false;
+			}
+			//If the credit is valid
+			else {
+				newFormOrderValid.credit = true;
+			}
 		}
 
-		setFormOrderValid(newFormValidData);
-	};
+		setFormOrderValid(newFormOrderValid);
+	}, [orderData]);
 
 	const handleCloseModal = () => {
 		setOpenModal(false);
@@ -280,7 +262,7 @@ const EditOrder = () => {
 	};
 
 	const handleSelectProduct = (product) => {
-		const existIndex = productsData.value.findIndex(
+		const existIndex = orderData.products.value.findIndex(
 			(existProduct) => existProduct.code === product.code
 		);
 
@@ -290,57 +272,77 @@ const EditOrder = () => {
 			return;
 		}
 
-		const newProductsData = { ...productsData };
-		newProductsData.value = [...productsData.value, product];
+		const newOrderData = { ...orderData };
+		newOrderData.products.value = [...newOrderData.products.value, product];
 
-		setProductsData(newProductsData);
+		setOrderData(newOrderData);
 	};
 
 	const handleChangeOrderQuantity = (code, orderQuantity = 0) => {
-		const existIndex = productsData.value.findIndex(
+		const existIndex = orderData.products.value.findIndex(
 			(existProduct) => existProduct.code === code
 		);
 
-		const newProductsData = { ...productsData };
-		newProductsData.value[existIndex].orderQuantity = orderQuantity;
-		newProductsData.value[existIndex].subtotal =
-			orderQuantity * newProductsData.value[existIndex].price;
-		newProductsData.total = productsData.value.reduce((total, product) => {
-			return total + product.price * product.orderQuantity;
-		}, 0);
-
-		setProductsData(newProductsData);
-
-		//Check if all products entered have at least 1 ordered quantity AND the ordered quantity does NOT exceed the stock quantity for the order to be VALID
-		const newFormValidData = { ...formOrderValid };
-		newFormValidData.products = productsData.value.every(
-			(product) =>
-				product.orderQuantity > 0 &&
-				product.quantity >= product.orderQuantity
+		const newOrderData = { ...orderData };
+		newOrderData.products.value[existIndex].orderQuantity = orderQuantity;
+		newOrderData.products.value[existIndex].subtotal =
+			orderQuantity * newOrderData.products.value[existIndex].price;
+		newOrderData.total = orderData.products.value.reduce(
+			(total, product) => {
+				return total + product.price * product.orderQuantity;
+			},
+			0
 		);
-		setFormOrderValid(newFormValidData);
+
+		setOrderData(newOrderData);
 	};
 
 	const handleDeleteProduct = (id) => {
-		const newProductsData = { ...productsData };
-		newProductsData.value = productsData.value.filter(
+		const newOrderData = { ...orderData };
+		newOrderData.products.value = orderData.products.value.filter(
 			(product) => product.code !== id
 		);
-		newProductsData.total = productsData.value.reduce((total, product) => {
-			if (product.code !== id) {
-				return total + product.price * product.orderQuantity;
-			}
-			return total;
-		}, 0);
+		newOrderData.total = newOrderData.products.value.reduce(
+			(total, product) => {
+				if (product.code !== id) {
+					return total + product.price * product.orderQuantity;
+				}
+				return total;
+			},
+			0
+		);
 
-		setProductsData(newProductsData);
-
-		//Update the credit errors everytime a product is being deleted
-		updateCredit(creditRef.current.value);
+		setOrderData(newOrderData);
 	};
 
 	const handleCreditChange = (e) => {
-		updateCredit(e.target.value);
+		const newOrderData = { ...orderData };
+
+		//If the credit is less than 0
+		if (parseInt(e.target.value) < 0) {
+			newOrderData.credit.value = parseInt(e.target.value);
+			newOrderData.credit.hasError = true;
+			newOrderData.credit.error = "Credit cannot be less than zero!";
+			setOrderData(newOrderData);
+			return;
+		}
+		//If the credit is greater than the total order amount
+		else if (parseInt(e.target.value) > orderData.total) {
+			newOrderData.credit.value = parseInt(e.target.value);
+			newOrderData.credit.hasError = true;
+			newOrderData.credit.error =
+				"Credit cannot be greater than the total amount!";
+			setOrderData(newOrderData);
+			return;
+		}
+		//Allow empty credit
+		else {
+			newOrderData.credit.value = parseInt(e.target.value);
+			newOrderData.credit.hasError = false;
+			newOrderData.credit.error = "";
+			setOrderData(newOrderData);
+			return;
+		}
 	};
 
 	const handleRemarksChange = (e) => {
@@ -350,13 +352,13 @@ const EditOrder = () => {
 		setOrderData(newOrderData);
 	};
 
-	const handleSubmitOrder = (e) => {
+	const handleSubmitOrder = async (e) => {
 		e.preventDefault();
 
 		//Get the status of the order
 		const status = e.currentTarget.id;
 
-		const formattedProducts = productsData.value.map((product) => {
+		const formattedProducts = orderData.products.value.map((product) => {
 			return {
 				code: product.code,
 				name: product.name,
@@ -367,14 +369,28 @@ const EditOrder = () => {
 		});
 
 		const submitOrderData = {
-			customer: customerData.id.value,
+			customer: orderData.customerId.value,
 			products: formattedProducts,
 			credit: orderData.credit.value,
 			status,
 			remarks: orderData.remarks.value,
+			userId: auth.userId,
 		};
 
-		console.log(submitOrderData);
+		setReadingIsLoading(null); //To avoid displaying the error message in the form itself (editing errors must be in dialog)
+		try {
+			await sendRequest(
+				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/orders/${auth.currentId}`,
+				"PATCH",
+				JSON.stringify(submitOrderData),
+				{
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${auth.token}`,
+				}
+			);
+
+			props.onClose("Successfully edited order!");
+		} catch (err) {}
 	};
 
 	const selectBody = () => {
@@ -386,7 +402,21 @@ const EditOrder = () => {
 
 	return (
 		<>
-			{/* Snackbars */}
+			{/* Loading in updating */}
+			{
+				isLoading && !readingIsLoading && (
+					<LoadingDialog />
+				) /*Loading dialog appears only when updating the customer*/
+			}
+			{!isLoading && readingIsLoading == null && httpErrors && (
+				<ErrorDialog
+					open={!!httpErrors}
+					message={httpErrors}
+					onHandleClose={clearError}
+				/>
+			)}
+
+			{/*Snackbars*/}
 			{warnings && (
 				<SnackbarTemplate
 					open={!!warnings}
@@ -395,7 +425,6 @@ const EditOrder = () => {
 					onHandleClose={handleClearWarnings}
 				/>
 			)}
-
 			{/* Dialogs */}
 			{errors && (
 				<ErrorDialog
@@ -404,7 +433,6 @@ const EditOrder = () => {
 					onHandleClose={handleClearErrors}
 				/>
 			)}
-
 			{/* Modals */}
 			<ModalTemplate
 				open={openModal}
@@ -418,176 +446,205 @@ const EditOrder = () => {
 				{selectBody()}
 			</ModalTemplate>
 
-			<form noValidate autoComplete="off" className={classes.root}>
-				<Card variant="outlined" className={classes.card}>
-					<CardHeader
-						className={classes.cardHeader}
-						title={
-							<Typography variant="h6" color="primary">
-								Customer Information
-							</Typography>
-						}
-					/>
-					<CardContent className={classes.cardContent}>
-						<Grid container>
-							<Grid item className={classes.grid} xs={12}>
-								<TextField
-									value={customerData.customerNumber.value}
-									size="small"
-									className={classes.textField}
-									id="customer-number"
-									label="Customer Number"
-									variant="outlined"
-									readOnly
-									disabled
-								/>
-							</Grid>
-							<Grid item className={classes.grid} xs={5}>
-								<TextField
-									value={customerData.lastName.value}
-									size="small"
-									className={classes.textField}
-									id="customer-last-name"
-									label="Last Name"
-									variant="outlined"
-									readOnly
-									disabled
-								/>
-							</Grid>
-							<Grid item className={classes.grid} xs={5}>
-								<TextField
-									value={customerData.firstName.value}
-									size="small"
-									className={classes.textField}
-									id="customer-first-name"
-									label="First Name"
-									variant="outlined"
-									readOnly
-									disabled
-								/>
-							</Grid>
-							<Grid item className={classes.grid} xs={2}>
-								<TextField
-									value={customerData.middleInitial.value}
-									size="small"
-									className={classes.textField}
-									id="customer-middle-initial"
-									label="MI"
-									variant="outlined"
-									readOnly
-									disabled
-								/>
-							</Grid>
-						</Grid>
-					</CardContent>
-				</Card>
-				<Card variant="outlined" className={classes.card}>
-					<CardHeader
-						className={classes.cardHeader}
-						title={
-							<Typography variant="h6" color="primary">
-								Cart
-							</Typography>
-						}
-					/>
-					<CardContent className={classes.cardContent}>
-						<Grid container>
-							{DUMMY_DATA.status === "DRAFT" && (
+			{readingIsLoading && <Loading />}
+			{readingIsLoading === false && httpErrors && (
+				<EmptyContainer
+					message={
+						httpErrors ||
+						"Something went wrong. Please try again later."
+					}
+				/>
+			)}
+			{!readingIsLoading && !httpErrors && orderData && (
+				<form noValidate autoComplete="off" className={classes.root}>
+					<Card variant="outlined" className={classes.card}>
+						<CardHeader
+							className={classes.cardHeader}
+							title={
+								<Typography variant="h6" color="primary">
+									Customer Information
+								</Typography>
+							}
+						/>
+						<CardContent className={classes.cardContent}>
+							<Grid container>
 								<Grid item className={classes.grid} xs={12}>
-									<Button
-										color="primary"
-										variant="contained"
-										startIcon={<AddShoppingCartIcon />}
-										onClick={handleModalConfigSelectProduct}
-									>
-										{" "}
-										Select Product{" "}
-									</Button>
+									<TextField
+										value={orderData.customerNumber.value}
+										size="small"
+										className={classes.textField}
+										id="customer-number"
+										label="Customer Number"
+										variant="outlined"
+										readOnly
+										disabled
+									/>
 								</Grid>
-							)}
-
-							<Grid item className={classes.grid} xs={12}>
-								{/* Allow edit of products when DRAFTED */}
-								{DUMMY_DATA.status === "DRAFT" && (
-									<PrepareOrder
-										data={productsData.value}
-										total={productsData.total}
-										onQuantityChange={
-											handleChangeOrderQuantity
-										}
-										onDelete={handleDeleteProduct}
-										edit
+								<Grid item className={classes.grid} xs={5}>
+									<TextField
+										value={orderData.lastName.value}
+										size="small"
+										className={classes.textField}
+										id="customer-last-name"
+										label="Last Name"
+										variant="outlined"
+										readOnly
+										disabled
 									/>
-								)}
-								{/* Disllow edit of products when SUBMITTED, only credit is allowed to be updated */}
-								{DUMMY_DATA.status === "SUBMIT" && (
-									<ListingTable
-										headers={tableHeaders}
-										data={DUMMY_DATA.products}
-										total={total}
+								</Grid>
+								<Grid item className={classes.grid} xs={5}>
+									<TextField
+										value={orderData.firstName.value}
+										size="small"
+										className={classes.textField}
+										id="customer-first-name"
+										label="First Name"
+										variant="outlined"
+										readOnly
+										disabled
 									/>
+								</Grid>
+								<Grid item className={classes.grid} xs={2}>
+									<TextField
+										value={orderData.middleInitial.value}
+										size="small"
+										className={classes.textField}
+										id="customer-middle-initial"
+										label="MI"
+										variant="outlined"
+										readOnly
+										disabled
+									/>
+								</Grid>
+							</Grid>
+						</CardContent>
+					</Card>
+					<Card variant="outlined" className={classes.card}>
+						<CardHeader
+							className={classes.cardHeader}
+							title={
+								<Typography variant="h6" color="primary">
+									Cart
+								</Typography>
+							}
+						/>
+						<CardContent className={classes.cardContent}>
+							<Grid container>
+								{orderData.status.value === "DRAFT" && (
+									<Grid item className={classes.grid} xs={12}>
+										<Button
+											color="primary"
+											variant="contained"
+											startIcon={<AddShoppingCartIcon />}
+											onClick={
+												handleModalConfigSelectProduct
+											}
+										>
+											{" "}
+											Select Product{" "}
+										</Button>
+									</Grid>
 								)}
-							</Grid>
 
-							<Grid item className={classes.grid} xs={12}>
-								<TextField
-									inputRef={creditRef}
-									value={orderData.credit.value}
-									onChange={handleCreditChange}
-									size="small"
-									type="number"
-									className={classes.textField}
-									id="credit"
-									label="Credit"
-									variant="outlined"
-									error={orderData.credit.hasError}
-									helperText={orderData.credit.error}
-								/>
-							</Grid>
-						</Grid>
-					</CardContent>
-				</Card>
-				<Card variant="outlined" className={classes.card}>
-					<CardHeader
-						className={classes.cardHeader}
-						title={
-							<Typography variant="h6" color="primary">
-								Remarks
-							</Typography>
-						}
-					/>
-					<CardContent className={classes.cardContent}>
-						<Grid container>
-							<Grid item className={classes.grid} xs={12}>
-								<TextField
-									value={orderData.remarks.value}
-									onChange={handleRemarksChange}
-									size="small"
-									multiline
-									rows={3}
-									className={classes.textField}
-									id="remarks"
-									variant="outlined"
-									placeholder="Optional"
-								/>
-							</Grid>
-						</Grid>
-					</CardContent>
-				</Card>
+								<Grid item className={classes.grid} xs={12}>
+									{/* Allow edit of products when DRAFTED */}
+									{orderData.status.value === "DRAFT" && (
+										<PrepareOrder
+											data={orderData.products.value}
+											total={orderData.total}
+											onQuantityChange={
+												handleChangeOrderQuantity
+											}
+											onDelete={handleDeleteProduct}
+											edit
+										/>
+									)}
+									{/* Disllow edit of products when SUBMITTED, only credit is allowed to be updated */}
+									{orderData.status.value === "SUBMIT" && (
+										<ListingTable
+											headers={tableHeaders}
+											data={orderData.products.value}
+											total={orderData.total}
+										/>
+									)}
+								</Grid>
 
-				<Grid
-					item
-					className={classes.grid}
-					style={{ textAlign: "right" }}
-					xs={12}
-				>
-					{DUMMY_DATA.status === "DRAFT" && (
+								<Grid item className={classes.grid} xs={12}>
+									<TextField
+										value={orderData.credit.value}
+										onChange={handleCreditChange}
+										size="small"
+										type="number"
+										className={classes.textField}
+										id="credit"
+										label="Credit"
+										variant="outlined"
+										error={orderData.credit.hasError}
+										helperText={orderData.credit.error}
+									/>
+								</Grid>
+							</Grid>
+						</CardContent>
+					</Card>
+					<Card variant="outlined" className={classes.card}>
+						<CardHeader
+							className={classes.cardHeader}
+							title={
+								<Typography variant="h6" color="primary">
+									Remarks
+								</Typography>
+							}
+						/>
+						<CardContent className={classes.cardContent}>
+							<Grid container>
+								<Grid item className={classes.grid} xs={12}>
+									<TextField
+										value={orderData.remarks.value}
+										onChange={handleRemarksChange}
+										size="small"
+										multiline
+										rows={3}
+										className={classes.textField}
+										id="remarks"
+										variant="outlined"
+										placeholder="Optional"
+									/>
+								</Grid>
+							</Grid>
+						</CardContent>
+					</Card>
+
+					<Grid
+						item
+						className={classes.grid}
+						style={{ textAlign: "right" }}
+						xs={12}
+					>
+						{orderData.status.value === "DRAFT" && (
+							<Button
+								color="secondary"
+								variant="contained"
+								style={{ marginRight: 10 }}
+								type="submit"
+								id="draft"
+								onClick={handleSubmitOrder}
+								disabled={
+									!(
+										formOrderValid.products &&
+										formOrderValid.credit
+									)
+								}
+								startIcon={<DraftsIcon />}
+							>
+								{" "}
+								Save and submit as draft{" "}
+							</Button>
+						)}
 						<Button
-							color="secondary"
+							color="primary"
 							variant="contained"
-							style={{ marginRight: 10 }}
 							type="submit"
-							id="draft"
+							id="submit"
 							onClick={handleSubmitOrder}
 							disabled={
 								!(
@@ -595,28 +652,14 @@ const EditOrder = () => {
 									formOrderValid.credit
 								)
 							}
-							startIcon={<DraftsIcon />}
+							startIcon={<SendIcon />}
 						>
 							{" "}
-							Save and submit as draft{" "}
+							Submit Order{" "}
 						</Button>
-					)}
-					<Button
-						color="primary"
-						variant="contained"
-						type="submit"
-						id="submit"
-						onClick={handleSubmitOrder}
-						disabled={
-							!(formOrderValid.products && formOrderValid.credit)
-						}
-						startIcon={<SendIcon />}
-					>
-						{" "}
-						Submit Order{" "}
-					</Button>
-				</Grid>
-			</form>
+					</Grid>
+				</form>
+			)}
 		</>
 	);
 };
