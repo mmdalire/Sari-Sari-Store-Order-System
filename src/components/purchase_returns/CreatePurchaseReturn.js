@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useContext, useEffect } from "react";
 
 import Button from "@material-ui/core/Button";
 import CancelIcon from "@material-ui/icons/Cancel";
@@ -13,198 +13,18 @@ import Typography from "@material-ui/core/Typography";
 
 import DynamicTable from "../shared/UI/DynamicTable";
 import ErrorDialog from "../shared/UI/ErrorDialog";
+import Loading from "../shared/UI/Loading";
+import LoadingDialog from "../shared/UI/LoadingDialog";
 import { makeStyles } from "@material-ui/styles";
-import { green } from "@material-ui/core/colors";
 
-import { formValid } from "../../utils/utilities";
+import { AuthContext } from "../../context/auth-context";
 
-const DUMMY_ROWS = [
-	{
-		poNo: "PONO202202-0001",
-		customer: "TEST1 TESTL1",
-		products: [
-			{
-				code: "CGO-MSA",
-				name: "MEGA SARDINES",
-				quantity: 10,
-				price: 21,
-				cost: 17,
-				_id: "620fbff03f030d924d878abd",
-			},
-			{
-				code: "CGO-LSA",
-				name: "LIGO SARDINES",
-				quantity: 10,
-				price: 21,
-				cost: 17,
-				_id: "620fbff03f030d924d878abe",
-			},
-			{
-				code: "CGO-LSB",
-				name: "LIGO SARDINES",
-				quantity: 10,
-				price: 21,
-				cost: 17,
-				_id: "620fbff03f030d924d878abe",
-			},
-			{
-				code: "CGO-LSC",
-				name: "LIGO SARDINES",
-				quantity: 10,
-				price: 21,
-				cost: 17,
-				_id: "620fbff03f030d924d878abe",
-			},
-			{
-				code: "CGO-LSD",
-				name: "LIGO SARDINES",
-				quantity: 10,
-				price: 21,
-				cost: 17,
-				_id: "620fbff03f030d924d878abe",
-			},
-			{
-				code: "CGO-LSE",
-				name: "LIGO SARDINES",
-				quantity: 10,
-				price: 21,
-				cost: 17,
-				_id: "620fbff03f030d924d878abe",
-			},
-			{
-				code: "CGO-LSF",
-				name: "LIGO SARDINES",
-				quantity: 10,
-				price: 21,
-				cost: 17,
-				_id: "620fbff03f030d924d878abe",
-			},
-		],
-		status: "SUBMIT",
-	},
-	{
-		poNo: "PONO202202-0002",
-		customer: "TEST2 TESTL2",
-		products: [
-			{
-				code: "CGO-MSA",
-				name: "MEGA SARDINES",
-				quantity: 10,
-				price: 21,
-				cost: 17,
-				_id: "620fbff03f030d924d878abd",
-			},
-			{
-				code: "CGO-LSA",
-				name: "LIGO SARDINES",
-				quantity: 10,
-				price: 21,
-				cost: 17,
-				_id: "620fbff03f030d924d878abe",
-			},
-		],
-		status: "SUBMIT",
-	},
-	{
-		poNo: "PONO202202-0003",
-		customer: "TEST3 TESTL3",
-		products: [
-			{
-				code: "CGO-MSA",
-				name: "MEGA SARDINES",
-				quantity: 10,
-				price: 21,
-				cost: 17,
-				_id: "620fbff03f030d924d878abd",
-			},
-			{
-				code: "CGO-LSA",
-				name: "LIGO SARDINES",
-				quantity: 10,
-				price: 21,
-				cost: 17,
-				_id: "620fbff03f030d924d878abe",
-			},
-		],
-		status: "DRAFT",
-	},
-	{
-		poNo: "PONO202202-0004",
-		customer: "TEST4 TESTL4",
-		products: [
-			{
-				code: "CGO-MSA",
-				name: "MEGA SARDINES",
-				quantity: 10,
-				price: 21,
-				cost: 17,
-				_id: "620fbff03f030d924d878abd",
-			},
-			{
-				code: "CGO-LSA",
-				name: "LIGO SARDINES",
-				quantity: 10,
-				price: 21,
-				cost: 17,
-				_id: "620fbff03f030d924d878abe",
-			},
-		],
-		status: "CANCELLED",
-	},
-	{
-		poNo: "PONO202202-0005",
-		customer: "TEST5 TESTL5",
-		products: [
-			{
-				code: "CGO-MSA",
-				name: "MEGA SARDINES",
-				quantity: 10,
-				price: 21,
-				cost: 17,
-				_id: "620fbff03f030d924d878abd",
-			},
-			{
-				code: "CGO-LSA",
-				name: "LIGO SARDINES",
-				quantity: 10,
-				price: 21,
-				cost: 17,
-				_id: "620fbff03f030d924d878abe",
-			},
-		],
-		status: "DRAFT",
-	},
-	{
-		poNo: "PONO202202-0006",
-		customer: "TEST6 TESTL6",
-		products: [
-			{
-				code: "CGO-MSA",
-				name: "MEGA SARDINES",
-				quantity: 10,
-				price: 21,
-				cost: 17,
-				_id: "620fbff03f030d924d878abd",
-			},
-			{
-				code: "CGO-LSA",
-				name: "LIGO SARDINES",
-				quantity: 10,
-				price: 21,
-				cost: 17,
-				_id: "620fbff03f030d924d878abe",
-			},
-		],
-		edPrice: 0,
-		credit: 1,
-		status: "SUBMIT",
-	},
-];
+import { useHttpClient } from "../../hooks/http-hook";
 
 const tableHeaders = [
 	{ id: "code", label: "Product Code", minWidth: 100 },
 	{ id: "name", label: "Brand Name", minWidth: 300 },
-	{ id: "quantity", label: "Order Quantity" },
+	{ id: "quantity", label: "Quantity Left" },
 	{ id: "returnQuantity", label: "Return Quantity" },
 	{ id: "deleteAction", label: "" },
 ];
@@ -242,12 +62,16 @@ const useStyles = makeStyles((theme) => {
 const CreatePurchaseReturn = (props) => {
 	const classes = useStyles();
 
+	const auth = useContext(AuthContext);
+
+	const { isLoading, httpErrors, sendRequest, clearError } = useHttpClient();
+
 	const [errors, setErrors] = useState(null);
 	const [formValid, setFormValid] = useState(false);
 	const [orderNumber, setOrderNumber] = useState("");
-	const [showOrderDetails, setShowOrderDetails] = useState(false);
 	const [orderDetail, setOrderDetail] = useState(null);
 	const [reason, setReason] = useState("");
+	const [sendIsLoading, setSendIsLoading] = useState(false);
 
 	//Update the disable prop of the submit button whenever a product is being deleted
 	useEffect(() => {
@@ -268,7 +92,6 @@ const CreatePurchaseReturn = (props) => {
 	};
 
 	const handleCloseShowDetails = () => {
-		setShowOrderDetails(false);
 		setOrderDetail(null);
 		setFormValid(false);
 	};
@@ -277,20 +100,26 @@ const CreatePurchaseReturn = (props) => {
 		setErrors(null);
 	};
 
-	const handleSearchOrder = () => {
-		const orderDetail = DUMMY_ROWS.find(
-			(order) => order.poNo === orderNumber.toUpperCase()
-		);
+	const handleSearchOrder = async () => {
+		let url = `${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/purchase_return/${orderNumber}/order`;
 
-		if (orderDetail) {
-			setOrderDetail(orderDetail);
-			setShowOrderDetails(true);
-			return;
-		}
+		try {
+			const data = await sendRequest(url, "GET", null, {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${auth.token}`,
+			});
 
-		setErrors(
-			"This order does not exists! Please check the order number and try again."
-		);
+			//If the order does not exists
+			if (data.products.length === 0) {
+				setErrors(data.message);
+				return;
+			}
+
+			setOrderDetail({
+				products: data.products,
+				showOrderDetails: true,
+			});
+		} catch (err) {}
 	};
 
 	const handleReturnQuantityChange = (code, returnQuantity = 0) => {
@@ -324,7 +153,7 @@ const CreatePurchaseReturn = (props) => {
 		setReason(e.target.value);
 	};
 
-	const handleSubmitPurchaseReturn = (e) => {
+	const handleSubmitPurchaseReturn = async (e) => {
 		e.preventDefault();
 
 		const formatReturnedProducts = orderDetail.products.map((product) => {
@@ -340,15 +169,33 @@ const CreatePurchaseReturn = (props) => {
 			order: orderNumber,
 			returnedProducts: formatReturnedProducts,
 			reason,
+			userId: auth.userId,
 		};
 
-		console.log(purchaseReturn);
+		try {
+			setSendIsLoading(true);
+
+			await sendRequest(
+				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/purchase_return`,
+				"POST",
+				JSON.stringify(purchaseReturn),
+				{
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${auth.token}`,
+				}
+			);
+
+			props.onClose("Successfully returned product/s!");
+		} catch (err) {}
+		setSendIsLoading(false);
 	};
 
 	return (
 		<>
+			{sendIsLoading && <LoadingDialog />}
+
 			{/* Dialogs */}
-			{errors && (
+			{!sendIsLoading && errors && (
 				<ErrorDialog
 					open={!!errors}
 					message={errors}
@@ -400,7 +247,15 @@ const CreatePurchaseReturn = (props) => {
 						</Grid>
 					</CardContent>
 				</Card>
-				{showOrderDetails && (
+				{isLoading && !sendIsLoading && <Loading />}
+				{!isLoading && !sendIsLoading && httpErrors && (
+					<ErrorDialog
+						open={!!httpErrors}
+						message={httpErrors}
+						onHandleClose={clearError}
+					/>
+				)}
+				{!isLoading && !sendIsLoading && !httpErrors && orderDetail && (
 					<>
 						<Card variant="outlined" className={classes.card}>
 							<CardHeader

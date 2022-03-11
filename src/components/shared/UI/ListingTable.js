@@ -79,7 +79,7 @@ const ListingTable = (props) => {
 
 	const prt = (prtNo) => {
 		return prtNo.map((prt) => {
-			return <Chip label={prt} style={{ marginBottom: 10 }} />;
+			return <Chip key={prt} label={prt} style={{ marginBottom: 10 }} />;
 		});
 	};
 
@@ -191,7 +191,8 @@ const ListingTable = (props) => {
 								value = prt(row.prtNo);
 							} else if (
 								header.id === "orderDate" ||
-								header.id === "createddate"
+								header.id === "createddate" ||
+								header.id === "returnDate"
 							) {
 								value = moment(row.createddate).format(
 									"MMMM D, YYYY hh:mm A"
