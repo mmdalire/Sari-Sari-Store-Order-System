@@ -31,6 +31,7 @@ const useStyles = makeStyles((theme) => {
 		},
 		title: {
 			padding: theme.spacing(2),
+			textAlign: "center",
 		},
 		listItem: {
 			"&:hover": {
@@ -91,7 +92,7 @@ const SideDrawer = () => {
 		>
 			<div className="">
 				<Typography variant="h5" className={classes.title}>
-					Inventory App
+					Sari-Sari Order System
 				</Typography>
 			</div>
 

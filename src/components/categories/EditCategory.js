@@ -19,12 +19,6 @@ import { useHttpClient } from "../../hooks/http-hook";
 
 import { formValid, generateCode } from "../../utils/utilities";
 
-const DUMMY_DATA = {
-	code: "BIS",
-	name: "BISCUIT",
-	status: "IN-USE",
-};
-
 const useStyles = makeStyles((theme) => {
 	return {
 		root: {

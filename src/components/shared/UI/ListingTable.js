@@ -192,7 +192,8 @@ const ListingTable = (props) => {
 							} else if (
 								header.id === "orderDate" ||
 								header.id === "createddate" ||
-								header.id === "returnDate"
+								header.id === "returnDate" ||
+								header.id === "updateddate"
 							) {
 								value = moment(row.createddate).format(
 									"MMMM D, YYYY hh:mm A"

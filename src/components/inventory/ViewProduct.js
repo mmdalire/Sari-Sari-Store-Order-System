@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
@@ -13,22 +13,12 @@ import { makeStyles } from "@material-ui/core";
 import ViewOrders from "./ViewOrders";
 import ViewPurchaseReturns from "./ViewPurchaseReturns";
 
-const DUMMY_PRODUCT = {
-	_id: "620741cb8891781725651d1f",
-	name: "CENTURY TUNA",
-	category: "CANNED GOODS",
-	description: "Some tuna",
-	code: "CAN-CTU",
-	type: "Some tuna",
-	unit: "pcs",
-	price: 40,
-	cost: 30,
-	quantity: 14,
-	userId: "6205d6667325c8cef024bd72",
-	createdDate: "2022-02-12T04:45:17.324Z",
-	isActive: true,
-	__v: 0,
-};
+import EmptyContainer from "../shared/UI/EmptyContainer";
+import Loading from "../shared/UI/Loading";
+
+import { AuthContext } from "../../context/auth-context";
+
+import { useHttpClient } from "../../hooks/http-hook";
 
 const useStyles = makeStyles((theme) => {
 	return {
@@ -57,7 +47,32 @@ const useStyles = makeStyles((theme) => {
 const ViewProduct = () => {
 	const classes = useStyles();
 
+	const auth = useContext(AuthContext);
+
+	const { isLoading, httpErrors, sendRequest, clearError } = useHttpClient();
+
+	const [viewData, setViewData] = useState(null);
 	const [tabValue, setTabValue] = useState(0); //Open ORDERS (0) by default
+
+	useEffect(() => {
+		const loadProductInfo = async () => {
+			try {
+				const data = await sendRequest(
+					`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/inventory/${auth.currentId}`,
+					"GET",
+					null,
+					{
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${auth.token}`,
+					}
+				);
+
+				setViewData(data);
+			} catch (err) {}
+		};
+
+		loadProductInfo();
+	}, []);
 
 	const handleTabChange = (e, newTab) => {
 		setTabValue(newTab);
@@ -74,89 +89,100 @@ const ViewProduct = () => {
 						</Typography>
 					}
 				/>
-				<CardContent className={classes.cardContent}>
-					<Grid container>
-						<Grid item className={classes.grid} xs={2}>
-							<TextField
-								value={DUMMY_PRODUCT.code}
-								size="small"
-								className={classes.textField}
-								id="product-code"
-								label="Product Code"
-								variant="outlined"
-								readOnly
-							/>
+				{isLoading && <Loading />}
+				{!isLoading && httpErrors && (
+					<EmptyContainer
+						message={
+							httpErrors ||
+							"Something went wrong. Please try again later."
+						}
+					/>
+				)}
+				{!isLoading && !httpErrors && viewData && (
+					<CardContent className={classes.cardContent}>
+						<Grid container>
+							<Grid item className={classes.grid} xs={2}>
+								<TextField
+									value={viewData.code}
+									size="small"
+									className={classes.textField}
+									id="product-code"
+									label="Product Code"
+									variant="outlined"
+									readOnly
+								/>
+							</Grid>
+							<Grid item className={classes.grid} xs={5}>
+								<TextField
+									value={viewData.name}
+									size="small"
+									className={classes.textField}
+									id="product-name"
+									label="Brand Name"
+									variant="outlined"
+									readOnly
+								/>
+							</Grid>
+							<Grid item className={classes.grid} xs={3}>
+								<TextField
+									value={viewData.category}
+									size="small"
+									className={classes.textField}
+									id="category"
+									label="Category"
+									variant="outlined"
+									readOnly
+								/>
+							</Grid>
+							<Grid item className={classes.grid} xs={2}>
+								<TextField
+									value={viewData.type.toUpperCase()}
+									size="small"
+									className={classes.textField}
+									id="type"
+									label="Type"
+									variant="outlined"
+									readOnly
+								/>
+							</Grid>
+							<Grid item className={classes.grid} xs={12}>
+								<TextField
+									value={viewData.description || ""}
+									size="small"
+									className={classes.textField}
+									multiline
+									rows={2}
+									id="description"
+									label="Description"
+									variant="outlined"
+									readOnly
+								/>
+							</Grid>
+							<Grid item className={classes.grid} xs={6}>
+								<TextField
+									value={viewData.quantity}
+									size="small"
+									className={classes.textField}
+									id="quantity"
+									label="Current Quantity Left"
+									variant="outlined"
+									readOnly
+								/>
+							</Grid>
+							<Grid item className={classes.grid} xs={6}>
+								<TextField
+									value={viewData.unit}
+									size="small"
+									className={classes.textField}
+									id="unit"
+									label="Unit"
+									variant="outlined"
+									readOnly
+								/>
+							</Grid>
 						</Grid>
-						<Grid item className={classes.grid} xs={5}>
-							<TextField
-								value={DUMMY_PRODUCT.name}
-								size="small"
-								className={classes.textField}
-								id="product-name"
-								label="Brand Name"
-								variant="outlined"
-								readOnly
-							/>
-						</Grid>
-						<Grid item className={classes.grid} xs={3}>
-							<TextField
-								value={DUMMY_PRODUCT.category}
-								size="small"
-								className={classes.textField}
-								id="category"
-								label="Category"
-								variant="outlined"
-								readOnly
-							/>
-						</Grid>
-						<Grid item className={classes.grid} xs={2}>
-							<TextField
-								value={DUMMY_PRODUCT.type}
-								size="small"
-								className={classes.textField}
-								id="type"
-								label="Type"
-								variant="outlined"
-								readOnly
-							/>
-						</Grid>
-						<Grid item className={classes.grid} xs={12}>
-							<TextField
-								value={DUMMY_PRODUCT.description}
-								size="small"
-								className={classes.textField}
-								multiline
-								rows={2}
-								id="description"
-								label="Description"
-								variant="outlined"
-								readOnly
-							/>
-						</Grid>
-						<Grid item className={classes.grid} xs={6}>
-							<TextField
-								value={DUMMY_PRODUCT.quantity}
-								size="small"
-								className={classes.textField}
-								id="quantity"
-								label="Current Quantity Left"
-								variant="outlined"
-								readOnly
-							/>
-						</Grid>
-						<Grid item className={classes.grid} xs={6}>
-							<TextField
-								value={DUMMY_PRODUCT.unit}
-								size="small"
-								className={classes.textField}
-								id="unit"
-								label="Unit"
-								variant="outlined"
-								readOnly
-							/>
-						</Grid>
-					</Grid>
-				</CardContent>
+					</CardContent>
+				)}
 			</Card>
 
 			<Tabs

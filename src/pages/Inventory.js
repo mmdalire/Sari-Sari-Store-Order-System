@@ -1,46 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 
 import AssignmentTurnedInIcon from "@material-ui/icons/AssignmentTurnedIn";
 import Container from "@material-ui/core/Container";
+import Pagination from "@material-ui/lab/Pagination";
 
+import EmptyContainer from "../components/shared/UI/EmptyContainer";
 import FilterForm from "../components/shared/form/FilterForm";
 import ListingTable from "../components/shared/UI/ListingTable";
+import Loading from "../components/shared/UI/Loading";
 import ModalTemplate from "../components/shared/UI/ModalTemplate";
 import PageTitle from "../components/shared/UI/PageTitle";
 import ViewProduct from "../components/inventory/ViewProduct";
 
-const DUMMY_ROWS = [
-	{
-		code: "PRD1",
-		name: "PRODUCT 1",
-		category: "CATEGORY 1",
-		unit: "PCS",
-		price: 10,
-		cost: 20,
-		quantity: 20,
-		status: "ACTIVE",
-	},
-	{
-		code: "PRD2",
-		name: "PRODUCT 2",
-		category: "CATEGORY 2",
-		unit: "PCS",
-		price: 15,
-		cost: 25,
-		quantity: 25,
-		status: "INACTIVE",
-	},
-	{
-		code: "PRD3",
-		name: "PRODUCT 3",
-		category: "CATEGORY 3",
-		unit: "PCS",
-		price: 20,
-		cost: 30,
-		quantity: 30,
-		status: "ACTIVE",
-	},
-];
+import { AuthContext } from "../context/auth-context";
+
+import { useHttpClient } from "../hooks/http-hook";
 
 const sortFields = [
 	{ value: "createddate", label: "Created Date" },
@@ -57,7 +31,6 @@ const tableHeaders = [
 	{ id: "category", label: "Category" },
 	{ id: "quantity", label: "Current quantity" },
 	{ id: "unit", label: "Unit" },
-	{ id: "status", label: "Status" },
 	{ id: "actions", label: "", minWidth: 5 },
 ];
 
@@ -96,24 +69,31 @@ const viewInventoryModal = {
 };
 
 const Inventory = () => {
-	const [filter, setFilter] = useState({});
-	const [limit, setLimit] = useState(1);
+	const auth = useContext(AuthContext);
+
+	const { isLoading, httpErrors, sendRequest, clearError } = useHttpClient();
+
+	const [filter, setFilter] = useState({
+		search: "",
+		sort: "createddate",
+		order: "desc",
+		limit: 10,
+		additional: {
+			isBlacklisted: false,
+		},
+	});
 	const [page, setPage] = useState(1);
+	const [total, setTotal] = useState(null);
+	const [list, setList] = useState(null);
 	const [openModal, setOpenModal] = useState(false);
 	const [modalConfig, setModalConfig] = useState(viewInventoryModal);
 
 	const handleFilter = (filters) => {
-		console.log(filters);
 		setFilter(filters);
 	};
 
-	const handleLimit = (limit) => {
-		setLimit(limit);
-		setPage(1);
-	};
-
-	const handlePage = (page) => {
-		setPage(page);
+	const handlePage = (e, newPage) => {
+		setPage(newPage);
 	};
 
 	const handleCloseModal = () => {
@@ -136,6 +116,33 @@ const Inventory = () => {
 		}
 	};
 
+	const loadProducts = async () => {
+		let url = `${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/inventory?sort=${filter.sort}&order=${filter.order}&limit=${filter.limit}&page=${page}`;
+
+		//If there is a search keyword
+		if (filter.search) {
+			url = `${url}&search=${filter.search}`;
+		}
+
+		try {
+			clearError();
+
+			const data = await sendRequest(url, "GET", null, {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${auth.token}`,
+			});
+
+			setList(data.data);
+			setTotal(data.count);
+		} catch (err) {}
+	};
+
+	const totalPages = total ? Math.ceil(total / filter.limit) : 0;
+
+	useEffect(() => {
+		loadProducts();
+	}, [filter, page]);
+
 	return (
 		<>
 			{/* Modals */}
@@ -155,16 +162,45 @@ const Inventory = () => {
 			<Container>
 				<PageTitle title="Inventory" />
 				<FilterForm sort={sortFields} onHandleFilters={handleFilter} />
-				<ListingTable
-					headers={tableHeaders}
-					data={DUMMY_ROWS}
-					limit={limit}
-					page={page}
-					availableMenu={optionMenu}
-					onHandleLimit={handleLimit}
-					onHandlePage={handlePage}
-					onHandleModalConfig={handleModalConfig}
-				/>
+				{isLoading && <Loading />}
+				{!isLoading && httpErrors && (
+					<EmptyContainer
+						message={
+							httpErrors ||
+							"Something went wrong. Please try again later."
+						}
+					/>
+				)}
+				{!isLoading && !httpErrors && total === 0 && (
+					<EmptyContainer message="No products found!" />
+				)}
+				{!isLoading && !httpErrors && total > 0 && (
+					<>
+						<ListingTable
+							headers={tableHeaders}
+							data={list}
+							page={page}
+							availableMenu={optionMenu}
+							onHandlePage={handlePage}
+							onHandleModalConfig={handleModalConfig}
+						/>
+						<div
+							style={{
+								display: "flex",
+								width: "100%",
+								justifyContent: "center",
+								marginTop: 20,
+							}}
+						>
+							<Pagination
+								count={totalPages}
+								color="primary"
+								page={page}
+								onChange={handlePage}
+							/>
+						</div>
+					</>
+				)}
 			</Container>
 		</>
 	);

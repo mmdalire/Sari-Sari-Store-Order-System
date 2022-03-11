@@ -15,45 +15,6 @@ import { AuthContext } from "../../context/auth-context";
 
 import { useHttpClient } from "../../hooks/http-hook";
 
-const DUMMY_TOP_CUSTOMERS = [
-	{
-		_id: "6205dba347cec49ff87c46ae",
-		ordersCount: 15,
-		customer: {
-			customerNo: "CRM202202-0002",
-			firstName: "ADAM",
-			lastName: "BERRY",
-		},
-	},
-	{
-		_id: "6205dbd147cec49ff87c46b1",
-		ordersCount: 1,
-		customer: {
-			customerNo: "CRM202202-0003",
-			firstName: "MAX",
-			lastName: "CHURCHILL",
-		},
-	},
-	{
-		_id: "6205dbd147cec49ff87c46b1",
-		ordersCount: 1,
-		customer: {
-			customerNo: "CRM202202-0003",
-			firstName: "MAX",
-			lastName: "CHURCHILL",
-		},
-	},
-	{
-		_id: "6205dbd147cec49ff87c46b1",
-		ordersCount: 1,
-		customer: {
-			customerNo: "CRM202202-0003",
-			firstName: "MAX",
-			lastName: "CHURCHILL",
-		},
-	},
-];
-
 const useStyles = makeStyles((theme) => {
 	return {
 		root: {

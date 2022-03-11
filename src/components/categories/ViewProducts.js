@@ -52,8 +52,6 @@ const ViewCustomerCredit = () => {
 
 	const totalPages = total ? Math.ceil(total / limit) : 0;
 
-	console.log(viewData);
-
 	return (
 		<>
 			{isLoading && <Loading />}
