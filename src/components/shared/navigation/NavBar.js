@@ -5,7 +5,7 @@ import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
 import IconButton from "@material-ui/core/IconButton";
 import Menu from "@material-ui/core/Menu";
 import MenuItem from "@material-ui/core/MenuItem";
-import ToolBar from "@material-ui/core/ToolBar";
+import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import { makeStyles } from "@material-ui/styles";
 import { blue } from "@material-ui/core/colors";
@@ -54,7 +54,7 @@ const NavBar = () => {
 
 	return (
 		<AppBar className={classes.appbar} elevation={2}>
-			<ToolBar>
+			<Toolbar>
 				<Typography
 					style={{
 						width: "100%",
@@ -91,7 +91,7 @@ const NavBar = () => {
 						Logout
 					</MenuItem>
 				</Menu>
-			</ToolBar>
+			</Toolbar>
 		</AppBar>
 	);
 };
