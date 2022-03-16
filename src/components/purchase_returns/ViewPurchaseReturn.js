@@ -60,7 +60,7 @@ const ViewOrder = () => {
 		const loadPurchaseReturnInfo = async () => {
 			try {
 				const data = await sendRequest(
-					`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/purchase_return/${auth.currentId}`,
+					`${process.env.REACT_APP_URL_PREFIX}/api/purchase_return/${auth.currentId}`,
 					"GET",
 					null,
 					{

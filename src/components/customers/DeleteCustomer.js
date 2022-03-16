@@ -38,7 +38,7 @@ const DeleteCustomer = (props) => {
 	const handleSubmit = async (e) => {
 		try {
 			const data = await sendRequest(
-				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/customers/${auth.currentId}`,
+				`${process.env.REACT_APP_URL_PREFIX}/api/customers/${auth.currentId}`,
 				"DELETE",
 				null,
 				{

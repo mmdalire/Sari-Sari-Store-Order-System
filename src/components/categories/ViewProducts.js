@@ -32,7 +32,7 @@ const ViewCustomerCredit = () => {
 	const loadProducts = async () => {
 		try {
 			const data = await sendRequest(
-				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/categories/${auth.currentId}/products?page=${page}&limit=10`,
+				`${process.env.REACT_APP_URL_PREFIX}/api/categories/${auth.currentId}/products?page=${page}&limit=10`,
 				"GET",
 				null,
 				{

@@ -280,7 +280,7 @@ const CreateCustomer = (props) => {
 
 		try {
 			await sendRequest(
-				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/customers`,
+				`${process.env.REACT_APP_URL_PREFIX}/api/customers`,
 				"POST",
 				JSON.stringify(customerData),
 				{

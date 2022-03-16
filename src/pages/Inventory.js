@@ -117,7 +117,7 @@ const Inventory = () => {
 	};
 
 	const loadProducts = async () => {
-		let url = `${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/inventory?sort=${filter.sort}&order=${filter.order}&limit=${filter.limit}&page=${page}`;
+		let url = `${process.env.REACT_APP_URL_PREFIX}/api/inventory?sort=${filter.sort}&order=${filter.order}&limit=${filter.limit}&page=${page}`;
 
 		//If there is a search keyword
 		if (filter.search) {

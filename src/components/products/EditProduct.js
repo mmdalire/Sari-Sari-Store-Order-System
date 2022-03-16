@@ -62,7 +62,7 @@ const EditProduct = (props) => {
 			setReadingIsLoading(true); //Activate loading spinner on the card ITSELF
 			try {
 				const data = await sendRequest(
-					`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/products/${auth.currentId}`,
+					`${process.env.REACT_APP_URL_PREFIX}/api/products/${auth.currentId}`,
 					"GET",
 					null,
 					{
@@ -146,7 +146,7 @@ const EditProduct = (props) => {
 		const loadCategories = async () => {
 			try {
 				const data = await sendRequest(
-					`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/categories`,
+					`${process.env.REACT_APP_URL_PREFIX}/api/categories`,
 					"GET",
 					null,
 					{
@@ -325,7 +325,7 @@ const EditProduct = (props) => {
 		setReadingIsLoading(null); //To avoid displaying the error message in the form itself (editing errors must be in dialog)
 		try {
 			await sendRequest(
-				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/products/${auth.currentId}`,
+				`${process.env.REACT_APP_URL_PREFIX}/api/products/${auth.currentId}`,
 				"PATCH",
 				JSON.stringify(productData),
 				{

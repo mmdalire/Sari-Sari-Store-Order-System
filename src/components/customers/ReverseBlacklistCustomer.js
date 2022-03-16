@@ -32,7 +32,7 @@ const ReverseBlacklistCustomer = (props) => {
 	const handleSubmit = async (e) => {
 		try {
 			const data = await sendRequest(
-				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/customers/${auth.currentId}/reverseBlacklist`,
+				`${process.env.REACT_APP_URL_PREFIX}/api/customers/${auth.currentId}/reverseBlacklist`,
 				"PATCH",
 				null,
 				{

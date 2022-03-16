@@ -139,7 +139,7 @@ const PurchaseReturns = () => {
 	};
 
 	const loadPurchaseReturns = async () => {
-		let url = `${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/purchase_return?sort=${filter.sort}&order=${filter.order}&limit=${filter.limit}&page=${page}`;
+		let url = `${process.env.REACT_APP_URL_PREFIX}/api/purchase_return?sort=${filter.sort}&order=${filter.order}&limit=${filter.limit}&page=${page}`;
 
 		//If there is a search keyword
 		if (filter.search) {

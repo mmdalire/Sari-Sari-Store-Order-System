@@ -254,7 +254,7 @@ const CreateCustomer = (props) => {
 
 		try {
 			await sendRequest(
-				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/products`,
+				`${process.env.REACT_APP_URL_PREFIX}/api/products`,
 				"POST",
 				JSON.stringify(productData),
 				{
@@ -272,7 +272,7 @@ const CreateCustomer = (props) => {
 		const loadCategories = async () => {
 			try {
 				const data = await sendRequest(
-					`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/categories`,
+					`${process.env.REACT_APP_URL_PREFIX}/api/categories`,
 					"GET",
 					null,
 					{

@@ -101,7 +101,7 @@ const CreatePurchaseReturn = (props) => {
 	};
 
 	const handleSearchOrder = async () => {
-		let url = `${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/purchase_return/${orderNumber}/order`;
+		let url = `${process.env.REACT_APP_URL_PREFIX}/api/purchase_return/${orderNumber}/order`;
 
 		try {
 			const data = await sendRequest(url, "GET", null, {
@@ -176,7 +176,7 @@ const CreatePurchaseReturn = (props) => {
 			setSendIsLoading(true);
 
 			await sendRequest(
-				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/purchase_return`,
+				`${process.env.REACT_APP_URL_PREFIX}/api/purchase_return`,
 				"POST",
 				JSON.stringify(purchaseReturn),
 				{

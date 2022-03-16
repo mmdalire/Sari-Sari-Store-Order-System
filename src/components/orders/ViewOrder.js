@@ -79,7 +79,7 @@ const ViewOrder = () => {
 		const loadOrderInfo = async () => {
 			try {
 				const data = await sendRequest(
-					`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/orders/${auth.currentId}`,
+					`${process.env.REACT_APP_URL_PREFIX}/api/orders/${auth.currentId}`,
 					"GET",
 					null,
 					{
@@ -99,7 +99,7 @@ const ViewOrder = () => {
 		const loadPrts = async () => {
 			try {
 				const data = await sendRequest(
-					`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/orders/${auth.currentId}/purchase_return`,
+					`${process.env.REACT_APP_URL_PREFIX}/api/orders/${auth.currentId}/purchase_return`,
 					"GET",
 					null,
 					{

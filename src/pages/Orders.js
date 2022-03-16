@@ -186,7 +186,7 @@ const Orders = () => {
 	};
 
 	const loadOrders = async () => {
-		let url = `${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/orders?sort=${filter.sort}&order=${filter.order}&limit=${filter.limit}&page=${page}`;
+		let url = `${process.env.REACT_APP_URL_PREFIX}/api/orders?sort=${filter.sort}&order=${filter.order}&limit=${filter.limit}&page=${page}`;
 
 		//If there is a search keyword
 		if (filter.search) {

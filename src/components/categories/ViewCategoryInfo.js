@@ -35,7 +35,7 @@ const ViewCustomerInfo = () => {
 		const loadCategoryInfo = async () => {
 			try {
 				const data = await sendRequest(
-					`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/categories/${auth.currentId}`,
+					`${process.env.REACT_APP_URL_PREFIX}/api/categories/${auth.currentId}`,
 					"GET",
 					null,
 					{

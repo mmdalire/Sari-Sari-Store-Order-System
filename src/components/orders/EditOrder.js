@@ -101,7 +101,7 @@ const EditOrder = (props) => {
 			try {
 				setReadingIsLoading(true); //Activate loading spinner on the card ITSELF
 				const data = await sendRequest(
-					`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/orders/${auth.currentId}`,
+					`${process.env.REACT_APP_URL_PREFIX}/api/orders/${auth.currentId}`,
 					"GET",
 					null,
 					{
@@ -380,7 +380,7 @@ const EditOrder = (props) => {
 		setReadingIsLoading(null); //To avoid displaying the error message in the form itself (editing errors must be in dialog)
 		try {
 			await sendRequest(
-				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/orders/${auth.currentId}`,
+				`${process.env.REACT_APP_URL_PREFIX}/api/orders/${auth.currentId}`,
 				"PATCH",
 				JSON.stringify(submitOrderData),
 				{

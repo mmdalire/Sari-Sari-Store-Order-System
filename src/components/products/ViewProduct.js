@@ -52,7 +52,7 @@ const ViewCategory = (props) => {
 		const loadProductInfo = async () => {
 			try {
 				const data = await sendRequest(
-					`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/products/${auth.currentId}`,
+					`${process.env.REACT_APP_URL_PREFIX}/api/products/${auth.currentId}`,
 					"GET",
 					null,
 					{

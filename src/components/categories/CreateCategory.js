@@ -106,7 +106,7 @@ const CreateCategory = (props) => {
 
 		try {
 			await sendRequest(
-				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/categories`,
+				`${process.env.REACT_APP_URL_PREFIX}/api/categories`,
 				"POST",
 				JSON.stringify(categoryData),
 				{

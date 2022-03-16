@@ -47,7 +47,7 @@ const ChangePriceAndCost = (props) => {
 			setReadingIsLoading(true); //Activate loading spinner on the card ITSELF
 			try {
 				const data = await sendRequest(
-					`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/products/${auth.currentId}`,
+					`${process.env.REACT_APP_URL_PREFIX}/api/products/${auth.currentId}`,
 					"GET",
 					null,
 					{
@@ -136,7 +136,7 @@ const ChangePriceAndCost = (props) => {
 		setReadingIsLoading(null); //To avoid displaying the error message in the form itself (editing errors must be in dialog)
 		try {
 			const data = await sendRequest(
-				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/products/${auth.currentId}/changePriceAndCost`,
+				`${process.env.REACT_APP_URL_PREFIX}/api/products/${auth.currentId}/changePriceAndCost`,
 				"PATCH",
 				JSON.stringify(productData),
 				{

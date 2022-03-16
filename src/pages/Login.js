@@ -119,7 +119,7 @@ const Login = (props) => {
 
 		try {
 			const { userId, token, firstName, lastName } = await sendRequest(
-				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/users/login`,
+				`${process.env.REACT_APP_URL_PREFIX}/api/users/login`,
 				"POST",
 				JSON.stringify({
 					email: loginCredentials.email.value,

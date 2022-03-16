@@ -337,7 +337,7 @@ const Register = (props) => {
 
 		try {
 			await sendRequest(
-				`${process.env.REACT_APP_URL_PREFIX}:${process.env.REACT_APP_PORT}/api/users/signup`,
+				`${process.env.REACT_APP_URL_PREFIX}/api/users/signup`,
 				"POST",
 				JSON.stringify({
 					firstName: fieldData.firstName.value,
