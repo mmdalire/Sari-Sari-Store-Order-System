@@ -6,6 +6,7 @@ import AssignmentTurnedInIcon from "@material-ui/icons/AssignmentTurnedIn";
 import CategoryIcon from "@material-ui/icons/Category";
 import DashboardIcon from "@material-ui/icons/Dashboard";
 import Drawer from "@material-ui/core/Drawer";
+import InfoIcon from "@material-ui/icons/Info";
 import PeopleIcon from "@material-ui/icons/People";
 import StorefrontIcon from "@material-ui/icons/Storefront";
 import ShoppingCartIcon from "@material-ui/icons/ShoppingCart";
@@ -76,6 +77,11 @@ const menuItems = [
 		text: "Inventory",
 		icon: <AssignmentTurnedInIcon color="secondary" />,
 		path: "/inventory",
+	},
+	{
+		text: "About",
+		icon: <InfoIcon color="secondary" />,
+		path: "/about",
 	},
 ];
 

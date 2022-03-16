@@ -12,6 +12,7 @@ import { blue, amber } from "@material-ui/core/colors";
 import { AuthContext } from "./context/auth-context";
 
 import MainNavigation from "./components/shared/navigation/MainNavigation";
+import About from "./pages/About";
 import Categories from "./pages/Categories";
 import Customers from "./pages/Customers";
 import Dashboard from "./pages/Dashboard";
@@ -20,6 +21,8 @@ import Login from "./pages/Login";
 import Orders from "./pages/Orders";
 import Products from "./pages/Products";
 import PurchaseReturns from "./pages/PurchaseReturns";
+
+import LoadingDialog from "./components/shared/UI/LoadingDialog";
 
 const theme = createTheme({
 	palette: {
@@ -41,6 +44,7 @@ const App = () => {
 	const [token, setToken] = useState(null);
 	const [userFirstName, setUserFirstName] = useState(null);
 	const [userLastName, setUserLastName] = useState(null);
+	const [isLoading, setIsLoading] = useState(true);
 
 	const login = useCallback((token, userId, userFirstName, userLastName) => {
 		setUserId(userId);
@@ -62,6 +66,7 @@ const App = () => {
 	}, []);
 
 	useEffect(() => {
+		setIsLoading(false);
 		const userData = JSON.parse(localStorage.getItem("userData"));
 
 		if (userData && userData.token) {
@@ -87,6 +92,7 @@ const App = () => {
 				<MainNavigation>
 					<Routes>
 						<Route path="/" element={<Dashboard />} exact />
+						<Route path="/about" element={<About />} exact />
 						<Route
 							path="/dashboard"
 							element={<Dashboard />}
@@ -126,7 +132,8 @@ const App = () => {
 			<AuthContext.Provider
 				value={{ token, userId, logout, userFirstName, userLastName }}
 			>
-				{routes}
+				{isLoading && <LoadingDialog />}
+				{!isLoading && routes}
 			</AuthContext.Provider>
 		</ThemeProvider>
 	);

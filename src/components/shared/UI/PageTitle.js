@@ -4,6 +4,7 @@ import AssignmentReturnIcon from "@material-ui/icons/AssignmentReturn";
 import AssignmentTurnedInIcon from "@material-ui/icons/AssignmentTurnedIn";
 import CategoryIcon from "@material-ui/icons/Category";
 import DashboardIcon from "@material-ui/icons/Dashboard";
+import InfoIcon from "@material-ui/icons/Info";
 import PeopleIcon from "@material-ui/icons/People";
 import ShoppingCartIcon from "@material-ui/icons/ShoppingCart";
 import StorefrontIcon from "@material-ui/icons/Storefront";
@@ -26,6 +27,9 @@ const PageTitle = (props) => {
 	//Set icon for each page
 	let icon;
 	switch (props.title) {
+		case "About":
+			icon = <InfoIcon color="primary" className={classes.icon} />;
+			break;
 		case "Customers":
 			icon = <PeopleIcon color="primary" className={classes.icon} />;
 			break;
